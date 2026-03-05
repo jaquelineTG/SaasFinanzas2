@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "946399823970",
+    "project_id": "saasfinanzas1",
+    "storage_bucket": "saasfinanzas1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:946399823970:android:f472ddd360989f6fdbe93b",
+        "android_client_info": {
+          "package_name": "com.example.saasfinanzas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0kpDxLo5UWjvrEvPiEp9BOX2tu6l8UHM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
