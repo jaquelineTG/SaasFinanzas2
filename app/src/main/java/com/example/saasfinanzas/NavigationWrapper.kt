@@ -11,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.saasfinanzas.features.auth.LoginScreen
 import com.example.saasfinanzas.features.auth.RegisterScreen
+import com.example.saasfinanzas.features.budget.AddBudget
 import com.example.saasfinanzas.features.budget.BudgetScreen
 import com.example.saasfinanzas.features.components.BottomNavigationBar
 import com.example.saasfinanzas.features.goals.GoalScreen
@@ -64,6 +65,9 @@ fun NavigationWrapper(navHostController: NavHostController) {
 
             composable("presupuestos") {
                 BudgetScreen(navHostController)
+            }
+            composable("añadir_presupuestos") {
+                AddBudget(navHostController)
             }
 
 //            composable("añadir_categoria") {

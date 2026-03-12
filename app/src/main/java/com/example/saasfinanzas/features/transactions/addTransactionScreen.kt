@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -87,7 +88,7 @@ fun AddTransaccionScreen(navHostController: NavController) {
         }
     ) { padding ->
 
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
@@ -95,78 +96,81 @@ fun AddTransaccionScreen(navHostController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Spacer(modifier = Modifier.height(20.dp))
+            item { Spacer(modifier = Modifier.height(20.dp)) }
 
-            // INCOME / EXPENSE TOGGLE
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = Color(0xFFEFEFEF),
-                        shape = RoundedCornerShape(16.dp)
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            color = Color(0xFFEFEFEF),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .padding(4.dp)
+                ) {
+
+                    ToggleButton(
+                        text = "Income",
+                        selected = !isExpense,
+                        onClick = { isExpense = false }
                     )
-                    .padding(4.dp)
-            ) {
 
-                ToggleButton(
-                    text = "Income",
-                    selected = !isExpense,
-                    onClick = { isExpense = false }
-                )
+                    ToggleButton(
+                        text = "Expense",
+                        selected = isExpense,
+                        onClick = { isExpense = true }
+                    )
+                }
+            }
 
-                ToggleButton(
-                    text = "Expense",
-                    selected = isExpense,
-                    onClick = { isExpense = true }
+            item { Spacer(modifier = Modifier.height(30.dp)) }
+
+            item {
+                OutlinedTextField(
+                    value = monto,
+                    onValueChange = {
+                        if (it.matches(Regex("^\\d*\\.?\\d*\$"))) {
+                            monto = it
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Amount") },
+                    placeholder = { Text("$ 0.00") },
+                    shape = RoundedCornerShape(16.dp),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    )
                 )
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
+            item { Spacer(modifier = Modifier.height(20.dp)) }
 
-            // 🔹 Amount
-            OutlinedTextField(
-                value = monto,
-                onValueChange = {
-                    if (it.matches(Regex("^\\d*\\.?\\d*\$"))) {
-                        monto = it
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Amount") },
-                placeholder = { Text("$ 0.00") },
-                shape = RoundedCornerShape(16.dp),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number
+            item {
+                OutlinedTextField(
+                    value = descripcion,
+                    onValueChange = { descripcion = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Name") },
+                    placeholder = { Text("e.g. Monthly Salary") },
+                    shape = RoundedCornerShape(16.dp)
                 )
-            )
+            }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            item { Spacer(modifier = Modifier.height(20.dp)) }
 
-            // 🔹 Name
-            OutlinedTextField(
-                value = descripcion,
-                onValueChange = { descripcion = it },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Name") },
-                placeholder = { Text("e.g. Monthly Salary") },
-                shape = RoundedCornerShape(16.dp)
-            )
+            item { SelectorCategoria() }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            item { Spacer(modifier = Modifier.height(20.dp)) }
 
-            SelectorCategoria()
+            item { SelectorFecha() }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            item { Spacer(modifier = Modifier.height(40.dp)) }
 
-            SelectorFecha()
+            item {
+                PrimaryButton("Add Movement", onClick = {})
+            }
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            // BOTÓN VERDE GRANDE
-
-            PrimaryButton("Add Movement", onClick = {})
-
-            Spacer(modifier = Modifier.height(30.dp))
+            item { Spacer(modifier = Modifier.height(30.dp)) }
         }
     }
 }

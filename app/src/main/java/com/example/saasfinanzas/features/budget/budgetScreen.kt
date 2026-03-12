@@ -14,11 +14,13 @@ import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.*
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
@@ -42,19 +44,19 @@ fun BudgetScreen(navController: NavController) {
     Scaffold(
         containerColor = Color(0xFFF3F4F6),
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Presupuestos",
-                        fontWeight = FontWeight.SemiBold
+                    CenterAlignedTopAppBar(
+                        title = {
+                            Text(
+                                "Presupuestos",
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        },
+                        actions = {
+                            IconButton(onClick = { navController.navigate("añadir_presupuestos") }) {
+                                Icon(Icons.Default.Add, contentDescription = null)
+                            }
+                        }
                     )
-                },
-                actions = {
-                    IconButton(onClick = { }) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                    }
-                }
-            )
         }
     ) { padding ->
 
@@ -155,12 +157,13 @@ fun BudgetItem(presupuesto: Presupuesto) {
             Spacer(modifier = Modifier.height(12.dp))
 
             LinearProgressIndicator(
-                progress = progress,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp),
-                color = Color(0xFF22C55E),
-                trackColor = Color(0xFFE5E7EB)
+            progress = { progress },
+            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(8.dp),
+            color = Color(0xFF22C55E),
+            trackColor = Color(0xFFE5E7EB),
+            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
             )
         }
     }

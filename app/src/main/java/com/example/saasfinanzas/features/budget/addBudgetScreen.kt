@@ -61,192 +61,165 @@ import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddBudget(navHostController: NavController){
+fun AddBudget(navController: NavController) {
+
+    var expanded by remember { mutableStateOf(false) }
+    var selectedOption by remember { mutableStateOf("") }
+
+    val categorias = listOf("Comida", "Transporte", "Renta")
+
+    var monto by remember { mutableStateOf("") }
+
+    val calendar = Calendar.getInstance()
+
+    val meses = listOf(
+        "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+        "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+    )
+
+    val anios = (2020..2030).map { it.toString() }
+
+    var mesSeleccionado by remember { mutableStateOf(meses[calendar.get(Calendar.MONTH)]) }
+    var anioSeleccionado by remember { mutableStateOf(calendar.get(Calendar.YEAR).toString()) }
+
+    var expandedMes by remember { mutableStateOf(false) }
+    var expandedAnio by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(Color(0xFFF3F4F6))
             .padding(24.dp)
-
     ) {
-        Row (
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
 
+        /* HEADER */
 
-
-
-        ){
-            IconButton(onClick = {}) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-
-
-            }
-
-            Text("Agregar Presupuesto" , modifier = Modifier.fillMaxWidth(),  textAlign = TextAlign.Center)
-
-        }
-        Spacer(modifier = Modifier.height(20.dp))
-
-        var expanded by remember { mutableStateOf(false) }
-        var selectedOption by remember { mutableStateOf("") }
-
-        val opciones = listOf("Comida", "Transporte", "Renta")
-        ElevatedCard(
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp)
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
 
+            IconButton(
+                onClick = { navController.popBackStack() },
+                modifier = Modifier.align(Alignment.CenterStart)
             ) {
-                Text("Categoria")
-                IconButton(onClick = {}) {
-                    Icon(Icons.Default.AddCircle, contentDescription = null)
-                }
-
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "")
             }
-            Spacer(modifier = Modifier.height(16.dp))
 
-            // Select
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
+            Text(
+                "Agregar Presupuesto",
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
 
-                OutlinedTextField(
-                    value = selectedOption,
-                    onValueChange = {},
-                    readOnly = true,
-                    placeholder = {
-                        Text("Selecciona una categoría")
-                    },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded)
-                    },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
+        Spacer(modifier = Modifier.height(24.dp))
 
-                    ,
+        /* CATEGORIA */
 
-                    shape = RoundedCornerShape(16.dp)
+        ElevatedCard(
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+
+            Column(Modifier.padding(16.dp)) {
+
+                Text(
+                    "CATEGORÍA",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.Gray
                 )
 
-                ExposedDropdownMenu(
+                Spacer(modifier = Modifier.height(10.dp))
+
+                ExposedDropdownMenuBox(
                     expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                    onExpandedChange = { expanded = !expanded }
                 ) {
-                    opciones.forEach { opcion ->
-                        DropdownMenuItem(
-                            text = { Text(opcion) },
-                            onClick = {
-                                selectedOption = opcion
-                                expanded = false
-                            }
-                        )
+
+                    OutlinedTextField(
+                        value = selectedOption,
+                        onValueChange = {},
+                        readOnly = true,
+                        placeholder = { Text("Selecciona una categoría") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded)
+                        },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp)
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+
+                        categorias.forEach {
+                            DropdownMenuItem(
+                                text = { Text(it) },
+                                onClick = {
+                                    selectedOption = it
+                                    expanded = false
+                                }
+                            )
+                        }
                     }
                 }
             }
-
         }
 
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(20.dp))
+
+        /* MONTO LIMITE */
+
         ElevatedCard(
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp)
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(15.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
 
-            ) {
-                Text("Monto Limite")
+            Column(Modifier.padding(16.dp)) {
 
+                Text(
+                    "MONTO LÍMITE",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.Gray
+                )
 
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedTextField(
+                    value = monto,
+                    onValueChange = { monto = it },
+                    leadingIcon = { Text("$") },
+                    placeholder = { Text("0.00") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp)
+                )
             }
-            Spacer(modifier = Modifier.height(10.dp))
-            Box(modifier = Modifier.padding(horizontal = 15.dp) .background(MaterialTheme.colorScheme.surfaceVariant).fillMaxWidth()){
-                Text("$$" , modifier = Modifier.padding(horizontal = 20.dp))
-            }
-
-
-
         }
 
-        Spacer(modifier = Modifier.height(30.dp))
-        // Estados
+        Spacer(modifier = Modifier.height(20.dp))
 
-        val anios = (2020..2030).map { it.toString() }
-
-
-
-        val calendar = Calendar.getInstance()
-
-        val mesActualIndex = calendar.get(Calendar.MONTH)
-        val anioActual = calendar.get(Calendar.YEAR)
-
-        val meses = listOf(
-            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-        )
-
-        var mesSeleccionado by remember {
-            mutableStateOf(meses[mesActualIndex])
-        }
-
-        var anioSeleccionado by remember {
-            mutableStateOf(anioActual.toString())
-        }
-
-        var expandedMes by remember { mutableStateOf(false) }
-        var expandedAnio by remember { mutableStateOf(false) }
+        /* MES Y AÑO */
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // 🔹 CARD MES
             ElevatedCard(
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                modifier = Modifier
-                    .weight(1f)
-                    .height(140.dp)
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier.weight(1f)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.Center
-                ) {
 
-                    Text(
-                        text = "MES",
-                        style = MaterialTheme.typography.labelMedium
-                    )
+                Column(Modifier.padding(16.dp)) {
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("MES", color = Color.Gray)
+
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     ExposedDropdownMenuBox(
                         expanded = expandedMes,
@@ -262,20 +235,19 @@ fun AddBudget(navHostController: NavController){
                             },
                             modifier = Modifier
                                 .menuAnchor()
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
                                 .fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp)
+                            shape = RoundedCornerShape(14.dp)
                         )
 
                         ExposedDropdownMenu(
                             expanded = expandedMes,
                             onDismissRequest = { expandedMes = false }
                         ) {
-                            meses.forEach { mes ->
+                            meses.forEach {
                                 DropdownMenuItem(
-                                    text = { Text(mes) },
+                                    text = { Text(it) },
                                     onClick = {
-                                        mesSeleccionado = mes
+                                        mesSeleccionado = it
                                         expandedMes = false
                                     }
                                 )
@@ -285,29 +257,17 @@ fun AddBudget(navHostController: NavController){
                 }
             }
 
-            // 🔹 CARD AÑO
             ElevatedCard(
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                modifier = Modifier
-                    .weight(1f)
-                    .height(140.dp)
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier.weight(1f)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.Center
-                ) {
 
-                    Text(
-                        text = "AÑO",
-                        style = MaterialTheme.typography.labelMedium
-                    )
+                Column(Modifier.padding(16.dp)) {
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("AÑO", color = Color.Gray)
+
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     ExposedDropdownMenuBox(
                         expanded = expandedAnio,
@@ -324,18 +284,18 @@ fun AddBudget(navHostController: NavController){
                             modifier = Modifier
                                 .menuAnchor()
                                 .fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp)
+                            shape = RoundedCornerShape(14.dp)
                         )
 
                         ExposedDropdownMenu(
                             expanded = expandedAnio,
                             onDismissRequest = { expandedAnio = false }
                         ) {
-                            anios.forEach { anio ->
+                            anios.forEach {
                                 DropdownMenuItem(
-                                    text = { Text(anio) },
+                                    text = { Text(it) },
                                     onClick = {
-                                        anioSeleccionado = anio
+                                        anioSeleccionado = it
                                         expandedAnio = false
                                     }
                                 )
@@ -345,17 +305,21 @@ fun AddBudget(navHostController: NavController){
                 }
             }
         }
+
         Spacer(modifier = Modifier.height(30.dp))
-        Button(onClick = {}, modifier = Modifier.fillMaxWidth()) {
+
+        /* BOTON */
+
+        Button(
+            onClick = {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp),
+            shape = RoundedCornerShape(30.dp)
+        ) {
             Text("Guardar Presupuesto")
         }
-
-
-
     }
-
-
-
 }
 
 
