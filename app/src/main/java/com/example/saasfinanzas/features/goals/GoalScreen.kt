@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessAlarms
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ElevatedCard
@@ -32,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +46,7 @@ import com.example.saasfinanzas.R
 import java.time.LocalDate
 
 data class Meta(
+    val id:Int,
     val descripcion: String,
     val imagen: Int,
     val fechaLimite: LocalDate,
@@ -53,6 +58,7 @@ data class Meta(
 @RequiresApi(Build.VERSION_CODES.O)
 val metas = listOf(
     Meta(
+        id=1,
         descripcion = "Viaje a la playa",
         imagen = R.drawable.playa,
         fechaLimite = LocalDate.of(2026, 12, 20),
@@ -60,6 +66,7 @@ val metas = listOf(
         ahorrado = 2500f
     ),
     Meta(
+        id=2,
         descripcion = "Comprar laptop",
         imagen = R.drawable.playa,
         fechaLimite = LocalDate.of(2026, 9, 10),
@@ -67,6 +74,7 @@ val metas = listOf(
         ahorrado = 5000f
     ),
     Meta(
+        id=3,
         descripcion = "Nuevo celular",
         imagen = R.drawable.playa,
         fechaLimite = LocalDate.of(2026, 8, 1),
@@ -82,7 +90,17 @@ val metas = listOf(
 @Composable
 fun GoalScreen(navHostController: NavHostController){
     Scaffold(
-        topBar = { CenterAlignedTopAppBar(title = { Text("Metas de Ahorro") }) },
+        topBar = { CenterAlignedTopAppBar(
+            title = { Text("Metas de Ahorro") },
+            actions = {
+                IconButton(onClick = {
+                    navHostController.navigate("añadir_metas")
+                }) {
+                    Icon(Icons.Filled.Add, contentDescription = "añadir meta")
+                }
+            })
+        }
+
 
     ) { padding ->
         LazyColumn(
@@ -91,7 +109,7 @@ fun GoalScreen(navHostController: NavHostController){
         ){
 
             items(metas) { meta ->
-                ItemGoal(meta)
+                ItemGoal(meta,navHostController)
             }
 
 
@@ -101,7 +119,7 @@ fun GoalScreen(navHostController: NavHostController){
 
 
 @Composable
-fun ItemGoal(meta: Meta) {
+fun ItemGoal(meta: Meta, navHostController: NavHostController) {
 
     val progress = (meta.ahorrado / meta.objetivo)
         .coerceIn(0f, 1f)
@@ -109,6 +127,7 @@ fun ItemGoal(meta: Meta) {
     val porcentaje = (progress * 100).toInt()
 
     ElevatedCard(
+
         shape = RoundedCornerShape(25.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = Color.White
@@ -119,6 +138,10 @@ fun ItemGoal(meta: Meta) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp, horizontal = 16.dp)
+            .clickable{
+                navHostController.navigate("detail_goal/${meta.id}")
+
+            }
     ) {
 
         Column(
@@ -132,7 +155,9 @@ fun ItemGoal(meta: Meta) {
                 Image(
                     painter = painterResource(id = meta.imagen),
                     contentDescription = meta.descripcion,
-                    modifier = Modifier.size(70.dp)
+                    Modifier
+                        .size(70.dp)
+                        .clip(RoundedCornerShape(12.dp))
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))

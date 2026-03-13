@@ -14,6 +14,8 @@ import com.example.saasfinanzas.features.auth.RegisterScreen
 import com.example.saasfinanzas.features.budget.AddBudget
 import com.example.saasfinanzas.features.budget.BudgetScreen
 import com.example.saasfinanzas.features.components.BottomNavigationBar
+import com.example.saasfinanzas.features.goals.AddGoal
+import com.example.saasfinanzas.features.goals.DetailGoal
 import com.example.saasfinanzas.features.goals.GoalScreen
 import com.example.saasfinanzas.features.home.Home
 import com.example.saasfinanzas.features.plus.PlusScreen
@@ -61,6 +63,17 @@ fun NavigationWrapper(navHostController: NavHostController) {
 
             composable("metas") {
                 GoalScreen(navHostController)
+            }
+            composable("añadir_metas") {
+                AddGoal(navHostController)
+            }
+            composable(
+                route = "detail_goal/{metaId}"
+            ) { backStackEntry ->
+
+                val metaId = backStackEntry.arguments?.getString("metaId")
+
+                DetailGoal(navHostController,metaId)
             }
 
             composable("presupuestos") {

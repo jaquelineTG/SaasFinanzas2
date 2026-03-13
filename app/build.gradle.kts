@@ -54,8 +54,8 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.kotlinx.coroutines.play.services)
 
-
-
+//para las imagenes seleccionadas desde el celular del usuario
+    implementation(libs.coil.compose)
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
