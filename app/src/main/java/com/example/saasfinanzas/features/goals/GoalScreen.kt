@@ -46,7 +46,7 @@ import com.example.saasfinanzas.R
 import java.time.LocalDate
 
 data class Meta(
-    val id:Int,
+    val id:String,
     val descripcion: String,
     val imagen: Int,
     val fechaLimite: LocalDate,
@@ -58,7 +58,7 @@ data class Meta(
 @RequiresApi(Build.VERSION_CODES.O)
 val metas = listOf(
     Meta(
-        id=1,
+        id="1",
         descripcion = "Viaje a la playa",
         imagen = R.drawable.playa,
         fechaLimite = LocalDate.of(2026, 12, 20),
@@ -66,7 +66,7 @@ val metas = listOf(
         ahorrado = 2500f
     ),
     Meta(
-        id=2,
+        id="2",
         descripcion = "Comprar laptop",
         imagen = R.drawable.playa,
         fechaLimite = LocalDate.of(2026, 9, 10),
@@ -74,7 +74,7 @@ val metas = listOf(
         ahorrado = 5000f
     ),
     Meta(
-        id=3,
+        id="3",
         descripcion = "Nuevo celular",
         imagen = R.drawable.playa,
         fechaLimite = LocalDate.of(2026, 8, 1),
@@ -139,7 +139,7 @@ fun ItemGoal(meta: Meta, navHostController: NavHostController) {
             .fillMaxWidth()
             .padding(vertical = 8.dp, horizontal = 16.dp)
             .clickable{
-                navHostController.navigate("detail_goal/${meta.id}")
+                navHostController.navigate("detail_goal/${meta.id}/${porcentaje}/${progress}")
 
             }
     ) {

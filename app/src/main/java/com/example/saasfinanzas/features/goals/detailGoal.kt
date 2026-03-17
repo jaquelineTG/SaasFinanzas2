@@ -5,6 +5,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -48,10 +49,11 @@ val aportes=listOf(
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailGoal(navHostController: NavHostController, metaId: Int?) {
+fun DetailGoal(navHostController: NavHostController, metaId: String?,porcentaje:String?,progress:String?) {
     val meta = metas.find { it.id==metaId }
     val progreso = 0.75f
-    val porcentaje = (progreso * 100).toInt()
+
+
 
     Scaffold(
         topBar = {
@@ -118,9 +120,9 @@ fun DetailGoal(navHostController: NavHostController, metaId: Int?) {
                             fontSize = 36.sp,
                             fontWeight = FontWeight.Bold
                         )
-// la suma de los aportes van aqui
+
                         Text(
-                            text = "$750",
+                            text = "$${progress}",
                             color = Color.Gray
                         )
                     }
@@ -139,8 +141,8 @@ fun DetailGoal(navHostController: NavHostController, metaId: Int?) {
                 )
             }
 
-            items(aportes) { aporte ->
-                AporteItem(aporte)
+            itemsIndexed(aportes) { index,aporte ->
+                AporteItem(aporte,index+1)
             }
 
             item { Spacer(modifier = Modifier.height(40.dp)) }
@@ -173,7 +175,8 @@ fun DetailGoal(navHostController: NavHostController, metaId: Int?) {
 
 @Composable
 fun AporteItem(
-    aporte: Aporte
+    aporte: Aporte,
+    contador:Int
 ) {
 
     Card(
@@ -196,7 +199,7 @@ fun AporteItem(
             ) {
 
                 Text(
-                    text = "Aporte del ",
+                    text = "Aporte ${contador} ",
                     fontWeight = FontWeight.Medium
                 )
 
@@ -213,6 +216,7 @@ fun AporteItem(
                 fontWeight = FontWeight.Bold
             )
         }
+
     }
 }
 

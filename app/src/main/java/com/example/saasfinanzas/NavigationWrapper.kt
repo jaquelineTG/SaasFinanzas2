@@ -68,12 +68,19 @@ fun NavigationWrapper(navHostController: NavHostController) {
                 AddGoal(navHostController)
             }
             composable(
-                route = "detail_goal/{metaId}"
+                //Por defecto Navigation guarda los argumentos como String.
+                route = "detail_goal/{metaId}/{porcentaje}/{progress}"
             ) { backStackEntry ->
 
-                val metaId = backStackEntry.arguments?.getString("metaId")
+                val metaId = backStackEntry.arguments
+                    ?.getString("metaId")
+                val porcentaje = backStackEntry.arguments
+                    ?.getString("porcentaje")
+                val progress = backStackEntry.arguments
+                    ?.getString("progress")
 
-                DetailGoal(navHostController,metaId)
+
+                DetailGoal(navHostController,metaId,porcentaje,progress)
             }
 
             composable("presupuestos") {
