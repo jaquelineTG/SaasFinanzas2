@@ -16,11 +16,11 @@ class AuthViewModel(
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState
 
-    fun register(email: String, password: String) {
+    fun register(email: String, password: String,name:String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
 
-            val result = repository.register(email, password)
+            val result = repository.register(email, password, name)
 
             _authState.value = result.fold(
                 onSuccess = { AuthState.Success(it) },

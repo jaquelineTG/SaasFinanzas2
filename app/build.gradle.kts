@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.firebase.firestore.ktx)
 
 //para las imagenes seleccionadas desde el celular del usuario
     implementation(libs.coil.compose)

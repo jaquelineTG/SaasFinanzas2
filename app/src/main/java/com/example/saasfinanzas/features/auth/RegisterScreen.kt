@@ -84,6 +84,16 @@ fun RegisterScreen(navHostController: NavHostController) {
             Spacer(modifier = Modifier.height(32.dp))
 
             OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
                 modifier = Modifier.fillMaxWidth(),
@@ -109,7 +119,7 @@ fun RegisterScreen(navHostController: NavHostController) {
             Button(
                 onClick = {
                     if (password == confirmPassword) {
-                        viewModel.register(email, password)
+                        viewModel.register(email, password,name)
                     }
                 },
                 modifier = Modifier
