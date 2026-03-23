@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias (libs.plugins.googleServices)
     alias (libs.plugins.crashlytics)
+    alias(libs.plugins.hilt)
+    kotlin("kapt")
 
 }
 
@@ -43,9 +45,20 @@ android {
         compose = true
     }
 
+
+}
+kapt {
+    correctErrorTypes = true
 }
 
+
 dependencies {
+
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+
+    // Para Navigation Compose + Hilt
+    implementation(libs.androidx.hilt.navigation.compose)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)

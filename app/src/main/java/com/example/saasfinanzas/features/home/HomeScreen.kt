@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.saasfinanzas.features.goals.Meta
@@ -33,22 +34,22 @@ import com.example.saasfinanzas.features.transactions.transacciones
 
 
 
-data class usuario (
-    val nombre: String,
-    val apellido:String
-);
-
-val usuarios=listOf(
-    usuario("Jaqueline","Torres"),
-    usuario("Evelyn","Gutierrez")
-)
+//data class usuario (
+//    val nombre: String,
+//    val apellido:String
+//);
+//
+//val usuarios=listOf(
+//    usuario("Jaqueline","Torres"),
+//    usuario("Evelyn","Gutierrez")
+//)
 
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Home(navHostController: NavHostController) {
-    val viewModel: HomeViewModel = viewModel()
+    val viewModel: HomeViewModel = hiltViewModel()
     val nombre by viewModel.nombre.collectAsState()
 
     LaunchedEffect(Unit) {

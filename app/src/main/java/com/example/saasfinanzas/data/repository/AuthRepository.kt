@@ -2,8 +2,9 @@ package com.example.saasfinanzas.data.repository
 
 
 import com.example.saasfinanzas.data.remote.AuthDataSource
+import javax.inject.Inject
 
-class AuthRepository(
+class AuthRepository @Inject constructor(
     private val dataSource: AuthDataSource
 ) {
 

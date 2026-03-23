@@ -22,8 +22,13 @@ material3 = "1.4.0"
 firebaseBom="34.9.0"
 services="4.4.4"
 crashlytics="3.0.6"
+hilt = "2.51.1"
+hiltNavigationCompose = "1.2.0"
 
 [libraries]
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
+hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
+androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-compose-bom-v20260101 = { module = "androidx.compose:compose-bom", version.ref = "composeBomVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleRuntimeKtx" }
@@ -59,6 +64,7 @@ firebase-crashlytics={module="com.google.firebase:firebase-crashlytics"}
 firebase-auth={module="com.google.firebase:firebase-auth"}
 
 [plugins]
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 googleServices={id="com.google.gms.google-services",version.ref="services"}
 crashlytics={id="com.google.firebase.crashlytics",version.ref="crashlytics"}

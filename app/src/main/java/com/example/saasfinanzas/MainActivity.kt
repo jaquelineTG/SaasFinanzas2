@@ -11,7 +11,11 @@ import com.example.saasfinanzas.ui.theme.SaasFinanzasTheme
 //navegacion
 
 import androidx.navigation.compose.rememberNavController
+import dagger.hilt.android.AndroidEntryPoint
+
 //
+
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)

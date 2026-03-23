@@ -4,10 +4,10 @@ package com.example.saasfinanzas.data.remote
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.tasks.await
 import com.google.firebase.firestore.FirebaseFirestore
+import javax.inject.Inject
 
 
-
-class AuthDataSource {
+class AuthDataSource @Inject constructor() {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 

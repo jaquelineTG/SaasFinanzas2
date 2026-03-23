@@ -5,10 +5,15 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.saasfinanzas.features.auth.AuthViewModel
 import com.example.saasfinanzas.features.auth.LoginScreen
 import com.example.saasfinanzas.features.auth.RegisterScreen
 import com.example.saasfinanzas.features.budget.AddBudget
@@ -19,6 +24,7 @@ import com.example.saasfinanzas.features.goals.DetailGoal
 import com.example.saasfinanzas.features.goals.GoalScreen
 import com.example.saasfinanzas.features.home.Home
 import com.example.saasfinanzas.features.plus.PlusScreen
+import com.example.saasfinanzas.features.plus.PlusViewModel
 import com.example.saasfinanzas.features.transactions.AddTransaccionScreen
 import com.example.saasfinanzas.features.transactions.TransactionsScreen
 import com.example.saasfinanzas.features.welcome.Welcome
@@ -26,18 +32,36 @@ import com.example.saasfinanzas.features.welcome.Welcome
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NavigationWrapper(navHostController: NavHostController) {
+    val viewModel: AuthViewModel = hiltViewModel()
+    val user by viewModel.currentUser.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.getCurrentUser()
+    }
+
+    LaunchedEffect(user) {
+        if (user == null) {
+            navHostController.navigate("welcome") {
+                popUpTo(0)
+            }
+        } else {
+            navHostController.navigate("home") {
+                popUpTo(0)
+            }
+        }
+    }
     Scaffold(
         bottomBar = {
-
+                if (user!=null){
                 BottomNavigationBar(navHostController)
+                }
 
         }
     ) { innerPadding ->
 
         NavHost(
             navController = navHostController,
-            startDestination = "presupuestos",
+            startDestination = "welcome",
             modifier = Modifier.padding(innerPadding)
         )
         {
