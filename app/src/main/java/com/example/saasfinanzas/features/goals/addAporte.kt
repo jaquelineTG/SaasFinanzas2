@@ -1,5 +1,7 @@
 package com.example.saasfinanzas.features.goals
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,11 +17,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddAporte() {
+fun AddAporte(navHostController: NavHostController, metaId: String?) {
 
+    val meta=metas.find { meta -> meta.id==metaId }
     var aporte by remember { mutableStateOf("0") }
 
     Scaffold(
@@ -27,7 +32,7 @@ fun AddAporte() {
             CenterAlignedTopAppBar(
                 title = { Text("Añadir aporte") },
                 navigationIcon = {
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = {navHostController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "volver")
                     }
                 }
@@ -131,7 +136,7 @@ fun AddAporte() {
                         )
 //poner el decripcion real
                         Text(
-                            text = "Viaje a la Playa",
+                            text = meta?.descripcion ?: "",
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
                         )

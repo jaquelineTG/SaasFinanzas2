@@ -2,6 +2,7 @@ package com.example.saasfinanzas.features.goals
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -163,7 +164,9 @@ fun DetailGoal(navHostController: NavHostController, metaId: String?,porcentaje:
                     Text(
                         text = "Agregar aporte",
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable(onClick = {navHostController.navigate("añadir_aporte/${metaId}")})
+
                     )
                 }
             }

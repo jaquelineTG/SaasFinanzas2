@@ -19,12 +19,15 @@ import com.example.saasfinanzas.features.auth.RegisterScreen
 import com.example.saasfinanzas.features.budget.AddBudget
 import com.example.saasfinanzas.features.budget.BudgetScreen
 import com.example.saasfinanzas.features.components.BottomNavigationBar
+import com.example.saasfinanzas.features.goals.AddAporte
 import com.example.saasfinanzas.features.goals.AddGoal
 import com.example.saasfinanzas.features.goals.DetailGoal
 import com.example.saasfinanzas.features.goals.GoalScreen
 import com.example.saasfinanzas.features.home.Home
 import com.example.saasfinanzas.features.plus.PlusScreen
-import com.example.saasfinanzas.features.plus.PlusViewModel
+import com.example.saasfinanzas.features.plus.configuration.ConfigurationScreen
+import com.example.saasfinanzas.features.plus.premium.PremiumScreen
+import com.example.saasfinanzas.features.plus.reports.ReportScreen
 import com.example.saasfinanzas.features.transactions.AddTransaccionScreen
 import com.example.saasfinanzas.features.transactions.TransactionsScreen
 import com.example.saasfinanzas.features.welcome.Welcome
@@ -107,6 +110,16 @@ fun NavigationWrapper(navHostController: NavHostController) {
                 DetailGoal(navHostController,metaId,porcentaje,progress)
             }
 
+            composable(
+                "añadir_aporte/{metaId}"
+            ) {backStackEntry ->
+
+                val metaId = backStackEntry.arguments
+                    ?.getString("metaId")
+
+                AddAporte(navHostController,metaId)
+            }
+
             composable("presupuestos") {
                 BudgetScreen(navHostController)
             }
@@ -124,6 +137,19 @@ fun NavigationWrapper(navHostController: NavHostController) {
 
             composable("mas") {
                 PlusScreen(navHostController)
+            }
+
+
+            composable("configuracion") {
+                ConfigurationScreen(navHostController)
+            }
+
+            composable("reportes") {
+                ReportScreen(navHostController)
+            }
+
+            composable("premium") {
+                PremiumScreen(navHostController)
             }
         }
 

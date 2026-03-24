@@ -2,6 +2,7 @@ package com.example.saasfinanzas.data.remote
 
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import kotlinx.coroutines.tasks.await
 import com.google.firebase.firestore.FirebaseFirestore
 import javax.inject.Inject
@@ -42,7 +43,7 @@ private val firestore = FirebaseFirestore.getInstance()
             val userData = hashMapOf(
                 "email" to email,
                 "nombre" to name,
-                "fechaRegistro" to System.currentTimeMillis()
+                "fechaRegistro" to FieldValue.serverTimestamp()
             )
 
             firestore.collection("usuarios")

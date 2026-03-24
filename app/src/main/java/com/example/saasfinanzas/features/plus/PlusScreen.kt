@@ -37,9 +37,9 @@ fun PlusScreen(navHostController: NavHostController) {
             modifier = Modifier.padding(bottom = 20.dp)
         )
 
-        MenuItem("Reportes", Icons.Default.BarChart)
-        MenuItem("Configuración", Icons.Default.Settings)
-        MenuItem("Metas de Ahorro", Icons.Default.Savings)
+        MenuItem("Reportes", Icons.Default.BarChart,{navHostController.navigate("reportes")})
+        MenuItem("Configuración", Icons.Default.Settings,{navHostController.navigate("configuracion")})
+
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -76,41 +76,25 @@ fun PlusScreen(navHostController: NavHostController) {
                 Text(
                     text = "App Premium",
                     color = Color(0xFF00C853),
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.clickable(onClick = {navHostController.navigate("premium")})
+
                 )
             }
         }
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Botón cerrar sesión
-        Button(
-            onClick = {
-                viewModel.logout()
 
-                navHostController.navigate("login") {
-                    popUpTo(navHostController.graph.startDestinationId) {
-                        inclusive = true
-                    }
-                }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Red
-            ),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text("Cerrar sesión", color = Color.White)
-        }
     }
 }
 
 @Composable
-fun MenuItem(text: String, icon: ImageVector) {
+fun MenuItem(text: String, icon: ImageVector,onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { }
+            .clickable { onClick()}
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
