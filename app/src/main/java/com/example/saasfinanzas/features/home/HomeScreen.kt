@@ -66,7 +66,16 @@ fun Home(navHostController: NavHostController) {
     val ultimos = transacciones.takeLast(3)
 
     Scaffold(
+        containerColor = Color(0xFFF3F4F6),
 
+        topBar = { CenterAlignedTopAppBar(
+            title = { Text("Inicio") },
+
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color(0xFFF3F4F6),
+                scrolledContainerColor = Color(0xFFF3F4F6)
+            ))
+        }
 
 
 
@@ -106,7 +115,6 @@ fun Header(nombre: String) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Column {
-            Text("Buenos días,", color = Color.Gray)
             Text("Hola, $nombre", fontWeight = FontWeight.Bold)
         }
     }

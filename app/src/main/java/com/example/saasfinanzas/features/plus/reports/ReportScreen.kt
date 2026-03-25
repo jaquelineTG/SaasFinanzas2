@@ -20,12 +20,28 @@ import androidx.navigation.NavHostController
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportScreen(navHostController: NavHostController) {
 
     var selectedTab by remember { mutableStateOf("Weekly") }
 
-    Scaffold { padding ->
+    Scaffold (
+
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Reportes") },
+                navigationIcon = {
+                    IconButton(onClick = {navHostController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "volver")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFFF3F4F6),
+                    scrolledContainerColor = Color(0xFFF3F4F6)
+                ))
+        }
+    ){ padding ->
 
         LazyColumn(
             modifier = Modifier
@@ -36,35 +52,7 @@ fun ReportScreen(navHostController: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // HEADER
-            item {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Color.Gray)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Financial Journey")
-                    }
 
-                    Icon(Icons.Outlined.Notifications, contentDescription = null)
-                }
-            }
-
-            // TITULOS
-            item {
-                Column {
-                    Text("INSIGHTS", style = MaterialTheme.typography.labelSmall)
-                    Text("Spending Reports", style = MaterialTheme.typography.headlineSmall)
-                }
-            }
 
             // TABS
             item {

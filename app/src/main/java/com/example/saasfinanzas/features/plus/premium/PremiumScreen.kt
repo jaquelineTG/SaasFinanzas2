@@ -18,10 +18,26 @@ import androidx.navigation.NavHostController
 
 import androidx.compose.foundation.lazy.LazyColumn
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PremiumScreen(navHostController: NavHostController) {
 
     Scaffold(
+        containerColor = Color(0xFFF3F4F6),
+
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Configuración") },
+                navigationIcon = {
+                    IconButton(onClick = {navHostController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "volver")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFFF3F4F6),
+                    scrolledContainerColor = Color(0xFFF3F4F6)
+                ))
+        }
 
     ) { padding ->
 
@@ -34,32 +50,6 @@ fun PremiumScreen(navHostController: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // HEADER
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = null,
-                            modifier = Modifier.clickable {
-                                navHostController.popBackStack()
-                            }
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Financial Journey")
-                    }
-
-                    Row {
-                        Icon(Icons.Default.Notifications, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Icon(Icons.Default.Person, contentDescription = null)
-                    }
-                }
-            }
 
             // HERO CARD
             item {
@@ -71,14 +61,6 @@ fun PremiumScreen(navHostController: NavHostController) {
                         modifier = Modifier.padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(140.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(Color.DarkGray)
-                        )
 
                         Spacer(modifier = Modifier.height(12.dp))
 
@@ -170,7 +152,7 @@ fun PremiumScreen(navHostController: NavHostController) {
                         Text("Plan mensual premium")
 
                         Text(
-                            "$4.99 / mes",
+                            "$49.99 / mes",
                             style = MaterialTheme.typography.headlineMedium
                         )
 

@@ -24,6 +24,7 @@ services="4.4.4"
 crashlytics="3.0.6"
 hilt = "2.51.1"
 hiltNavigationCompose = "1.2.0"
+ui = "1.10.5"
 
 [libraries]
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
@@ -62,6 +63,7 @@ material3 = { group = "androidx.compose.material3", name = "material3", version.
 firebase-bom={module="com.google.firebase:firebase-bom", version.ref="firebaseBom"}
 firebase-crashlytics={module="com.google.firebase:firebase-crashlytics"}
 firebase-auth={module="com.google.firebase:firebase-auth"}
+ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 
 [plugins]
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }

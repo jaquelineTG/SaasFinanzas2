@@ -18,37 +18,48 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.saasfinanzas.features.auth.AuthViewModel
+import com.google.firebase.auth.FirebaseAuth
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.TextStyle
-import java.util.Locale
 
-data class Transacciones(
-    val categoriaNombre: String,
-    val monto: Float,
-    val descripcion: String,
-    val tipo: String,
-    val fecha: LocalDate
-)
+//data class Transacciones(
+//    val categoriaNombre: String,
+//    val monto: Float,
+//    val descripcion: String,
+//    val tipo: String,
+//    val fecha: LocalDate
+//)
 
 @RequiresApi(Build.VERSION_CODES.O)
-val transacciones = listOf(
-    Transacciones("Compras", 100f, "Almuerzo en restaurante", "gasto", LocalDate.now()),
-    Transacciones("Transporte", 200f, "Taxi", "gasto", LocalDate.now().minusDays(1)),
-    Transacciones("Salario", 5000f, "Pago mensual", "ingreso", LocalDate.parse("2026-04-22"))
-)
+//val transacciones = listOf(
+//    Transacciones("Compras", 100f, "Almuerzo en restaurante", "gasto", LocalDate.now()),
+//    Transacciones("Transporte", 200f, "Taxi", "gasto", LocalDate.now().minusDays(1)),
+//    Transacciones("Salario", 5000f, "Pago mensual", "ingreso", LocalDate.parse("2026-04-22"))
+//)
 
-@RequiresApi(Build.VERSION_CODES.O)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionsScreen(navHostController: NavController) {
 
     var tipoSeleccionado by remember { mutableStateOf("todas") }
     var fechaSeleccionada by remember { mutableStateOf<LocalDate?>(null) }
-
-    val listaFiltrada = transacciones.filter { transaccion ->
+    val viewModel: TransactionViewModel = hiltViewModel()
+    val authViewModel: AuthViewModel=hiltViewModel()
+    val movimientos by viewModel.movimientos.collectAsState()
+//    LaunchedEffect(Unit) {
+//        val uid = authViewModel.getCurrentUser()?.uid
+//        viewModel.cargarMovimientos(uid)
+//    }
+    LaunchedEffect(Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@LaunchedEffect
+        viewModel.cargarMovimientos(uid)
+    }
+    val listaFiltrada = movimientos.filter { transaccion ->
 
         val filtroTipo = when (tipoSeleccionado) {
             "ingreso" -> transaccion.tipo == "ingreso"
@@ -56,14 +67,21 @@ fun TransactionsScreen(navHostController: NavController) {
             else -> true
         }
 
-        val filtroFecha = fechaSeleccionada?.let {
-            transaccion.fecha == it
+        val filtroFecha = fechaSeleccionada?.let { fechaSeleccionada ->
+
+            val fechaMovimiento = Instant.ofEpochMilli(transaccion.fecha)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate()
+
+            fechaMovimiento == fechaSeleccionada
+
         } ?: true
 
         filtroTipo && filtroFecha
     }
 
     Scaffold(
+        containerColor = Color(0xFFF3F4F6),
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Movimientos") },
@@ -73,8 +91,11 @@ fun TransactionsScreen(navHostController: NavController) {
                     }) {
                         Icon(Icons.Default.Add, contentDescription = "Agregar")
                     }
-                }
-            )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFFF3F4F6),
+                    scrolledContainerColor = Color(0xFFF3F4F6)))
+
         }
     ) { padding ->
 
@@ -106,7 +127,7 @@ fun TransactionsScreen(navHostController: NavController) {
 @Composable
 fun transaccionItem(
     categoriaNombre: String,
-    monto: Float,
+    monto: Double,
     descripcion: String
 ) {
 

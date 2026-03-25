@@ -32,6 +32,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -90,6 +91,7 @@ val metas = listOf(
 @Composable
 fun GoalScreen(navHostController: NavHostController){
     Scaffold(
+        containerColor = Color(0xFFF3F4F6),
         topBar = { CenterAlignedTopAppBar(
             title = { Text("Metas de Ahorro") },
             actions = {
@@ -98,7 +100,11 @@ fun GoalScreen(navHostController: NavHostController){
                 }) {
                     Icon(Icons.Filled.Add, contentDescription = "añadir meta")
                 }
-            })
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color(0xFFF3F4F6),
+                scrolledContainerColor = Color(0xFFF3F4F6)
+            ))
         }
 
 

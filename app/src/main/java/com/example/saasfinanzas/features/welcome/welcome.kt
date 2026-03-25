@@ -56,10 +56,10 @@ fun Welcome(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Image(
-                painter = painterResource(R.drawable.welcome),
-                contentDescription = null
-            )
+                Image(
+                    painter = painterResource(R.drawable.welcome),
+                    contentDescription = null
+                )
 
             Spacer(modifier = Modifier.height(16.dp))
 

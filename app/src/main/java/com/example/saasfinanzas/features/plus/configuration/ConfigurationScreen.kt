@@ -1,5 +1,6 @@
 package com.example.saasfinanzas.features.plus.configuration
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,18 +23,40 @@ import androidx.navigation.NavHostController
 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.saasfinanzas.features.auth.AuthViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConfigurationScreen(navHostController: NavHostController) {
 
-    var biometricEnabled by remember { mutableStateOf(true) }
     var transactionAlerts by remember { mutableStateOf(true) }
     var budgetAlerts by remember { mutableStateOf(false) }
     val viewModel: AuthViewModel = hiltViewModel()
 
-    Scaffold { padding ->
+    Scaffold(
+        containerColor = Color(0xFFF3F4F6),
+
+        topBar = {
+            CenterAlignedTopAppBar(
+            title = { Text("Configuración") },
+                navigationIcon = {
+                    IconButton(onClick = {navHostController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "volver")
+                    }
+                },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color(0xFFF3F4F6),
+                scrolledContainerColor = Color(0xFFF3F4F6)
+            ))
+        }
+
+
+
+
+    ){ padding ->
 
         LazyColumn(
             modifier = Modifier
@@ -44,27 +67,7 @@ fun ConfigurationScreen(navHostController: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // HEADER
-            item {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Color.Gray)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Financial Journey", style = MaterialTheme.typography.titleMedium)
-                    }
 
-                    Icon(Icons.Default.Notifications, contentDescription = null)
-                }
-            }
 
             // PERFIL
             item {
@@ -78,8 +81,17 @@ fun ConfigurationScreen(navHostController: NavHostController) {
                             modifier = Modifier
                                 .size(100.dp)
                                 .clip(CircleShape)
-                                .background(Color.LightGray)
-                        )
+                                .background(Color.LightGray),
+                            contentAlignment = Alignment.Center
+                        ) {
+
+                            Image(
+                                painter = painterResource(com.example.saasfinanzas.R.drawable.perfil1),
+                                contentDescription = "Avatar",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
 
                         Box(
                             modifier = Modifier
@@ -104,23 +116,17 @@ fun ConfigurationScreen(navHostController: NavHostController) {
                         shape = RoundedCornerShape(50),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1DB954))
                     ) {
-                        Text("PREMIUM MEMBER", color = Color.White)
+                        Text("MIEMBRO PREMIUM", color = Color.White)
                     }
                 }
             }
 
             // SECURITY
             item {
-                SectionCard("Security", Icons.Outlined.Security) {
+                SectionCard("Seguridad", Icons.Outlined.Security) {
 
-                    RowItem(Icons.Outlined.Lock, "Change Password")
+                    RowItem(Icons.Outlined.Lock, "Cambiar Contraseña")
 
-                    SwitchItem(
-                        icon = Icons.Default.Fingerprint,
-                        text = "Biometric Login",
-                        checked = biometricEnabled,
-                        onCheckedChange = { biometricEnabled = it }
-                    )
                 }
             }
 
@@ -129,27 +135,19 @@ fun ConfigurationScreen(navHostController: NavHostController) {
                 SectionCard("Alerts", Icons.Outlined.Notifications) {
 
                     SwitchItem(
-                        text = "Transaction Alerts",
+                        text = "Recordatorio de Metas",
                         checked = transactionAlerts,
                         onCheckedChange = { transactionAlerts = it }
                     )
 
                     SwitchItem(
-                        text = "Budget Milestones",
+                        text = "Alerta Limite de Presupuesto",
                         checked = budgetAlerts,
                         onCheckedChange = { budgetAlerts = it }
                     )
                 }
             }
 
-            // SUPPORT
-            item {
-                SectionCard("Support", Icons.Default.Help) {
-
-                    RowItem(text = "Live Chat")
-                    RowItem(Icons.Outlined.Email, "Email Support")
-                }
-            }
 
             // LOGOUT
             item {
@@ -242,7 +240,10 @@ fun SwitchItem(
             Spacer(modifier = Modifier.width(8.dp))
         }
         Text(text, modifier = Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        Switch(checked = checked, onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedTrackColor = Color(0xFF1DB954)
+            ))
     }
 }
 

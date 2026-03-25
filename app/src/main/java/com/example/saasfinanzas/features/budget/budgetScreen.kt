@@ -55,7 +55,12 @@ fun BudgetScreen(navController: NavController) {
                             IconButton(onClick = { navController.navigate("añadir_presupuestos") }) {
                                 Icon(Icons.Default.Add, contentDescription = null)
                             }
-                        }
+                        },
+
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color(0xFFF3F4F6),
+                            scrolledContainerColor = Color(0xFFF3F4F6)
+                        )
                     )
         }
     ) { padding ->

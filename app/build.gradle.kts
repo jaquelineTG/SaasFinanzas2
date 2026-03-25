@@ -55,6 +55,7 @@ kapt {
 dependencies {
 
     implementation(libs.hilt.android)
+    implementation(libs.ui)
     kapt(libs.hilt.compiler)
 
     // Para Navigation Compose + Hilt
