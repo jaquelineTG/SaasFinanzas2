@@ -1,87 +1,53 @@
 package com.example.saasfinanzas.features.transactions
 
 import android.os.Build
-import android.widget.ToggleButton
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextDirection.Companion.Content
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.saasfinanzas.data.model.Movimiento
 import com.example.saasfinanzas.features.components.PrimaryButton
+import com.google.firebase.auth.FirebaseAuth
 import java.time.Instant
 import java.time.ZoneId
-
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTransaccionScreen(navHostController: NavController) {
+fun AddTransaccionScreen(
+    navHostController: NavController,
+
+) {
 
     var monto by remember { mutableStateOf("") }
     var descripcion by remember { mutableStateOf("") }
+    var categoria by remember { mutableStateOf("") }
+    var fecha by remember { mutableStateOf(0L) }
     var isExpense by remember { mutableStateOf(true) }
-
+    val viewModel: TransactionViewModel = hiltViewModel()
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        "New Movement",
-                        fontWeight = FontWeight.SemiBold
-                    )
-                },
+                title = { Text("New Movement", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = { navHostController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.Default.Cancel,
-                            contentDescription = "Cerrar"
-                        )
+                        Icon(Icons.Default.Cancel, contentDescription = "Cerrar")
                     }
                 }
             )
@@ -98,14 +64,12 @@ fun AddTransaccionScreen(navHostController: NavController) {
 
             item { Spacer(modifier = Modifier.height(20.dp)) }
 
+            // 🔹 Tipo (Income / Expense)
             item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(
-                            color = Color(0xFFEFEFEF),
-                            shape = RoundedCornerShape(16.dp)
-                        )
+                        .background(Color(0xFFEFEFEF), RoundedCornerShape(16.dp))
                         .padding(4.dp)
                 ) {
 
@@ -125,6 +89,7 @@ fun AddTransaccionScreen(navHostController: NavController) {
 
             item { Spacer(modifier = Modifier.height(30.dp)) }
 
+            // 🔹 Monto
             item {
                 OutlinedTextField(
                     value = monto,
@@ -137,14 +102,13 @@ fun AddTransaccionScreen(navHostController: NavController) {
                     label = { Text("Amount") },
                     placeholder = { Text("$ 0.00") },
                     shape = RoundedCornerShape(16.dp),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number
-                    )
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
             }
 
             item { Spacer(modifier = Modifier.height(20.dp)) }
 
+            // 🔹 Descripción
             item {
                 OutlinedTextField(
                     value = descripcion,
@@ -158,16 +122,50 @@ fun AddTransaccionScreen(navHostController: NavController) {
 
             item { Spacer(modifier = Modifier.height(20.dp)) }
 
-            item { SelectorCategoria() }
+            // 🔹 Categoria
+            item {
+                SelectorCategoria(
+                    categoria = categoria,
+                    onCategoriaSelected = { categoria = it }
+                )
+            }
 
             item { Spacer(modifier = Modifier.height(20.dp)) }
 
-            item { SelectorFecha() }
+            // 🔹 Fecha
+            item {
+                SelectorFecha(
+                    fecha = fecha,
+                    onFechaSelected = { fecha = it }
+                )
+            }
 
             item { Spacer(modifier = Modifier.height(40.dp)) }
 
+            //  BOTÓN GUARDAR
             item {
-                PrimaryButton("Add Movement", onClick = {})
+                PrimaryButton("Add Movement") {
+
+                    val montoDouble = monto.toDoubleOrNull() ?: 0.0
+
+                    if (monto.isBlank() || descripcion.isBlank() || categoria.isBlank() || fecha == 0L) {
+                        println("Faltan datos")
+                        return@PrimaryButton
+                    }
+
+                    val movimiento = Movimiento(
+                        categoriaId = categoria,
+                        categoriaNombre = categoria,
+                        tipo = if (isExpense) "gasto" else "ingreso",
+                        monto = montoDouble,
+                        descripcion = descripcion,
+                        fecha = fecha
+                    )
+
+                    viewModel.addMovimiento(movimiento)
+
+                    navHostController.popBackStack()
+                }
             }
 
             item { Spacer(modifier = Modifier.height(30.dp)) }
@@ -175,15 +173,16 @@ fun AddTransaccionScreen(navHostController: NavController) {
     }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SelectorCategoria() {
+fun SelectorCategoria(
+    categoria: String,
+    onCategoriaSelected: (String) -> Unit
+) {
 
     val categorias = listOf("Comida", "Transporte", "Salud", "Entretenimiento")
 
     var expanded by remember { mutableStateOf(false) }
-    var seleccionada by remember { mutableStateOf("") }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -191,13 +190,13 @@ fun SelectorCategoria() {
     ) {
 
         OutlinedTextField(
-            value = seleccionada,
+            value = categoria,
             onValueChange = {},
             readOnly = true,
             label = { Text("Categoría") },
             placeholder = { Text("Selecciona una categoría") },
             trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded)
             },
             modifier = Modifier
                 .menuAnchor()
@@ -208,11 +207,11 @@ fun SelectorCategoria() {
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            categorias.forEach { categoria ->
+            categorias.forEach {
                 DropdownMenuItem(
-                    text = { Text(categoria) },
+                    text = { Text(it) },
                     onClick = {
-                        seleccionada = categoria
+                        onCategoriaSelected(it)
                         expanded = false
                     }
                 )
@@ -224,13 +223,16 @@ fun SelectorCategoria() {
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SelectorFecha() {
+fun SelectorFecha(
+    fecha: Long,
+    onFechaSelected: (Long) -> Unit
+) {
 
     var showDialog by remember { mutableStateOf(false) }
 
     val datePickerState = rememberDatePickerState()
 
-    val fechaSeleccionada = datePickerState.selectedDateMillis?.let {
+    val fechaTexto = fecha.takeIf { it != 0L }?.let {
         Instant.ofEpochMilli(it)
             .atZone(ZoneId.systemDefault())
             .toLocalDate()
@@ -240,7 +242,7 @@ fun SelectorFecha() {
     Column {
 
         OutlinedTextField(
-            value = fechaSeleccionada,
+            value = fechaTexto,
             onValueChange = {},
             readOnly = true,
             label = { Text("Fecha") },
@@ -254,7 +256,12 @@ fun SelectorFecha() {
             DatePickerDialog(
                 onDismissRequest = { showDialog = false },
                 confirmButton = {
-                    TextButton(onClick = { showDialog = false }) {
+                    TextButton(onClick = {
+                        datePickerState.selectedDateMillis?.let {
+                            onFechaSelected(it)
+                        }
+                        showDialog = false
+                    }) {
                         Text("Aceptar")
                     }
                 },
@@ -280,8 +287,8 @@ fun RowScope.ToggleButton(
         modifier = Modifier
             .weight(1f)
             .background(
-                color = if (selected) Color.White else Color.Transparent,
-                shape = RoundedCornerShape(12.dp)
+                if (selected) Color.White else Color.Transparent,
+                RoundedCornerShape(12.dp)
             )
             .clickable { onClick() }
             .padding(vertical = 12.dp),
@@ -294,5 +301,3 @@ fun RowScope.ToggleButton(
         )
     }
 }
-
-

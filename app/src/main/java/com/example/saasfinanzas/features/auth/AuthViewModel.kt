@@ -46,9 +46,10 @@ class AuthViewModel @Inject constructor (
         }
     }
 
-    fun getCurrentUser() {
-        val user = repository.getCurrentUser()
-        _currentUser.value = user?.uid
+
+    fun getCurrentUserUid() {
+        val userUid = repository.getCurrentUserUid()
+        _currentUser.value = userUid
     }
 
     fun logout(){

@@ -10,13 +10,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -51,14 +57,11 @@ fun TransactionsScreen(navHostController: NavController) {
     val viewModel: TransactionViewModel = hiltViewModel()
     val authViewModel: AuthViewModel=hiltViewModel()
     val movimientos by viewModel.movimientos.collectAsState()
-//    LaunchedEffect(Unit) {
-//        val uid = authViewModel.getCurrentUser()?.uid
-//        viewModel.cargarMovimientos(uid)
-//    }
+
     LaunchedEffect(Unit) {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@LaunchedEffect
-        viewModel.cargarMovimientos(uid)
+        viewModel.cargarMovimientos()
     }
+
     val listaFiltrada = movimientos.filter { transaccion ->
 
         val filtroTipo = when (tipoSeleccionado) {
@@ -124,12 +127,24 @@ fun TransactionsScreen(navHostController: NavController) {
     }
 }
 
+
+fun getIconByCategory(categoria: String): ImageVector {
+    return when (categoria) {
+        "Comida" -> Icons.Filled.Fastfood
+        "Transporte" -> Icons.Filled.DirectionsCar
+        "Salud" -> Icons.Filled.Favorite
+        "Entretenimiento" -> Icons.Filled.Movie
+        else -> Icons.Filled.AttachMoney
+    }
+}
+
 @Composable
 fun transaccionItem(
     categoriaNombre: String,
     monto: Double,
     descripcion: String
 ) {
+
 
     ElevatedCard(
         colors = CardDefaults.elevatedCardColors(
@@ -156,7 +171,7 @@ fun transaccionItem(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.ShoppingBag,
+                    imageVector = getIconByCategory(categoriaNombre),
                     contentDescription = null,
                     tint = Color(0xFF22C55E)
                 )

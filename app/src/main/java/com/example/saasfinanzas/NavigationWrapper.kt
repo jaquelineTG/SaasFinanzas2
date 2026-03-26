@@ -39,7 +39,7 @@ fun NavigationWrapper(navHostController: NavHostController) {
     val user by viewModel.currentUser.collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.getCurrentUser()
+        viewModel.getCurrentUserUid()
     }
 
     LaunchedEffect(user) {
