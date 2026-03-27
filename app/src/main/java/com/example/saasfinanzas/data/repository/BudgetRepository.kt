@@ -12,4 +12,6 @@ class BudgetRepository  @Inject constructor(
 
     suspend fun addBudget(uid: String,presupuesto: Presupuesto) =
         dataSource.addBudget(uid,presupuesto)
+    suspend fun getBudgets(uid: String) =
+        dataSource.getBudgets(uid)
 }

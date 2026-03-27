@@ -26,6 +26,11 @@ import com.google.firebase.auth.FirebaseAuth
 import java.time.Instant
 import java.time.ZoneId
 
+
+data class CategoriaFree(
+    val id: String,
+    val nombre: String
+)
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -158,6 +163,7 @@ fun AddTransaccionScreen(
                     }
 
                     val movimiento = Movimiento(
+                        id="",
                         categoriaId = categoriaId,
                         categoriaNombre = categoriaNombre,
                         tipo = if (isExpense) "gasto" else "ingreso",
@@ -183,15 +189,12 @@ fun SelectorCategoria(
     categoria: String,
     onCategoriaSelected: (String,String) -> Unit
 ) {
-    data class Categoria(
-        val id: String,
-        val nombre: String
-    )
-    val categorias = listOf(
-        Categoria("1", "Comida"),
-        Categoria("2", "Transporte"),
-        Categoria("3", "Salud"),
-        Categoria("4", "Entretenimiento")
+
+    val categoriasFree = listOf(
+        CategoriaFree("1", "Comida"),
+        CategoriaFree("2", "Transporte"),
+        CategoriaFree("3", "Salud"),
+        CategoriaFree("4", "Entretenimiento")
     )
 
     var expanded by remember { mutableStateOf(false) }
@@ -219,7 +222,7 @@ fun SelectorCategoria(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            categorias.forEach {
+            categoriasFree.forEach {
                 DropdownMenuItem(
                     text = { Text(it.nombre) },
                     onClick = {

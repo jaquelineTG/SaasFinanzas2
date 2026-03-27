@@ -4,7 +4,6 @@ package com.example.saasfinanzas.features.budget
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -16,30 +15,50 @@ import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.*
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.saasfinanzas.data.model.Movimiento
+import com.example.saasfinanzas.data.model.Presupuesto
+import com.example.saasfinanzas.features.transactions.TransactionViewModel
 
-data class Presupuesto(
-    val categoriaNombre: String,
-    val montoLimite: Float,
-    val gastoActual: Float
-)
-
-val presupuestos = listOf(
-    Presupuesto("Comida", 500f, 340f),
-    Presupuesto("Transporte", 300f, 135f),
-    Presupuesto("Entretenimiento", 200f, 45f),
-    Presupuesto("Compras", 100f, 82f)
-)
+//data class Presupuesto(
+//    val categoriaNombre: String,
+//    val montoLimite: Float,
+//    val gastoActual: Float
+//)
+//
+//val presupuestos = listOf(
+//    Presupuesto("Comida", 500f, 340f),
+//    Presupuesto("Transporte", 300f, 135f),
+//    Presupuesto("Entretenimiento", 200f, 45f),
+//    Presupuesto("Compras", 100f, 82f)
+//)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BudgetScreen(navController: NavController) {
+    val viewModel: BudgetViewModel=hiltViewModel()
+    val presupuestos=viewModel.presupuestos.collectAsState()
+    val viewmodelMov: TransactionViewModel=hiltViewModel()
+    val movimientos=viewmodelMov.movimientos.collectAsState()
+
+
+    LaunchedEffect(Unit) {
+        viewModel.getBudgets()
+        viewmodelMov.cargarMovimientos()
+
+    }
+
+
 
     Scaffold(
         containerColor = Color(0xFFF3F4F6),
@@ -85,7 +104,7 @@ fun BudgetScreen(navController: NavController) {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(presupuestos) { presupuesto ->
+                items(presupuestos.value) { presupuesto ->
                     BudgetItem(presupuesto)
                 }
             }
@@ -96,7 +115,7 @@ fun BudgetScreen(navController: NavController) {
 
 @Composable
 fun BudgetItem(presupuesto: Presupuesto) {
-
+val categoriaActual=presupuesto.categoriaNombre;
     val progress = (presupuesto.gastoActual / presupuesto.montoLimite)
         .coerceIn(0f, 1f)
 

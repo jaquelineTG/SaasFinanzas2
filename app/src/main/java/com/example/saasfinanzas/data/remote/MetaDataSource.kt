@@ -1,38 +1,24 @@
 package com.example.saasfinanzas.data.remote
 
+import com.example.saasfinanzas.data.model.Meta
 import com.example.saasfinanzas.data.model.Movimiento
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class TransactionDataSource  @Inject constructor(){
+class MetaDataSource @Inject constructor(){
     private val firestore = FirebaseFirestore.getInstance()
-//    suspend fun addMovimiento(uid: String, movimiento: Movimiento): Result<Unit> {
-//        return try {
-//
-//            firestore.collection("usuarios")
-//                .document(uid)
-//                .collection("movimientos")
-//                .add(movimiento)
-//                .await()
-//
-//            Result.success(Unit)
-//
-//        } catch (e: Exception) {
-//            Result.failure(e)
-//        }
-//    }
-    suspend fun addMovimiento(uid: String, movimiento: Movimiento): Result<Unit> {
+    suspend fun addMeta(uid: String, meta: Meta): Result<Unit> {
         return try {
 
             val docRef = firestore.collection("usuarios")
                 .document(uid)
-                .collection("movimientos")
+                .collection("metas")
                 .document() // creas el doc manualmente
 
-            val movimientoConId = movimiento.copy(id = docRef.id)
+            val metaConId = meta.copy(id = docRef.id)
 
-            docRef.set(movimientoConId).await()
+            docRef.set(metaConId).await()
 
             Result.success(Unit)
 
@@ -44,17 +30,17 @@ class TransactionDataSource  @Inject constructor(){
 
 
     //obtener movimientos
-    suspend fun getMovimientos(uid: String): Result<List<Movimiento>> {
+    suspend fun cargarMetas(uid: String): Result<List<Meta>> {
         return try {
 
             val snapshot = firestore.collection("usuarios")
                 .document(uid)
-                .collection("movimientos")
+                .collection("metas")
                 .get()
                 .await()
 
             val lista = snapshot.documents.mapNotNull { doc ->
-                doc.toObject(Movimiento::class.java)?.copy(id = doc.id)
+                doc.toObject(Meta::class.java)?.copy(id = doc.id)
             }
 
             Result.success(lista)

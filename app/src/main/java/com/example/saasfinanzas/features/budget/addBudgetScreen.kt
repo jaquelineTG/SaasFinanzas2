@@ -48,7 +48,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.saasfinanzas.data.model.Movimiento
+import com.example.saasfinanzas.data.model.Presupuesto
+import com.example.saasfinanzas.features.components.PrimaryButton
+import com.example.saasfinanzas.features.transactions.CategoriaFree
+import com.example.saasfinanzas.features.transactions.TransactionViewModel
 import com.example.saasfinanzas.ui.theme.SaasFinanzasTheme
 
 import java.time.LocalDate
@@ -57,23 +63,26 @@ import java.util.Locale
 
 import java.util.Calendar
 
-//
-//val id: String = "",
-//val categoriaId: String = "",
-//val categoriaNombre: String = "",
-//val montoLimite: Double = 0.0,
-//val mes: Int = 0,
-//val anio: Int = 0,
-//val creadoEn: Long = 0L
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddBudget(navController: NavController) {
 
-    var expanded by remember { mutableStateOf(false) }
-    var selectedOption by remember { mutableStateOf("") }
 
-    val categorias = listOf("Comida", "Transporte", "Renta")
+    val categoriasFree = listOf(
+        CategoriaFree("1", "Comida"),
+        CategoriaFree("2", "Transporte"),
+        CategoriaFree("3", "Salud"),
+        CategoriaFree("4", "Entretenimiento")
+    )
+    val viewModel: BudgetViewModel = hiltViewModel()
+
+    var expanded by remember { mutableStateOf(false) }
+
+    var categoriaId by remember { mutableStateOf("") }
+    var categoriaNombre by remember { mutableStateOf("") }
+
 
     var monto by remember { mutableStateOf("") }
 
@@ -88,7 +97,8 @@ fun AddBudget(navController: NavController) {
 
     var mesSeleccionado by remember { mutableStateOf(meses[calendar.get(Calendar.MONTH)]) }
     var anioSeleccionado by remember { mutableStateOf(calendar.get(Calendar.YEAR).toString()) }
-
+    val mesNumero = meses.indexOf(mesSeleccionado) + 1
+    val anioNumero = anioSeleccionado.toInt()
     var expandedMes by remember { mutableStateOf(false) }
     var expandedAnio by remember { mutableStateOf(false) }
 
@@ -145,7 +155,7 @@ fun AddBudget(navController: NavController) {
                 ) {
 
                     OutlinedTextField(
-                        value = selectedOption,
+                        value = categoriaNombre,
                         onValueChange = {},
                         readOnly = true,
                         placeholder = { Text("Selecciona una categoría") },
@@ -163,11 +173,12 @@ fun AddBudget(navController: NavController) {
                         onDismissRequest = { expanded = false }
                     ) {
 
-                        categorias.forEach {
+                        categoriasFree.forEach {
                             DropdownMenuItem(
-                                text = { Text(it) },
+                                text = { Text(it.nombre) },
                                 onClick = {
-                                    selectedOption = it
+                                    categoriaId = it.id
+                                    categoriaNombre = it.nombre
                                     expanded = false
                                 }
                             )
@@ -317,14 +328,22 @@ fun AddBudget(navController: NavController) {
 
         /* BOTON */
 
-        Button(
-            onClick = {},
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(55.dp),
-            shape = RoundedCornerShape(30.dp)
-        ) {
-            Text("Guardar Presupuesto")
+        PrimaryButton("Añadir Presupuesto") {
+
+
+            val presupuesto = Presupuesto(
+                id="",
+                categoriaId =categoriaId ,
+                categoriaNombre = categoriaNombre,
+                montoLimite = monto.toDouble(),
+                mes = mesNumero,
+                anio = anioNumero,
+                creadoEn =System.currentTimeMillis()
+            )
+
+            viewModel.addBudget(presupuesto)
+
+            navController.popBackStack()
         }
     }
 }
