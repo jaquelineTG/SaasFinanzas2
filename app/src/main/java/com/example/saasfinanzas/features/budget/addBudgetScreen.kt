@@ -57,7 +57,14 @@ import java.util.Locale
 
 import java.util.Calendar
 
-
+//
+//val id: String = "",
+//val categoriaId: String = "",
+//val categoriaNombre: String = "",
+//val montoLimite: Double = 0.0,
+//val mes: Int = 0,
+//val anio: Int = 0,
+//val creadoEn: Long = 0L
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

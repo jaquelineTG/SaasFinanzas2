@@ -36,7 +36,8 @@ fun AddTransaccionScreen(
 
     var monto by remember { mutableStateOf("") }
     var descripcion by remember { mutableStateOf("") }
-    var categoria by remember { mutableStateOf("") }
+    var categoriaId by remember { mutableStateOf("") }
+    var categoriaNombre by remember { mutableStateOf("") }
     var fecha by remember { mutableStateOf(0L) }
     var isExpense by remember { mutableStateOf(true) }
     val viewModel: TransactionViewModel = hiltViewModel()
@@ -125,8 +126,11 @@ fun AddTransaccionScreen(
             // 🔹 Categoria
             item {
                 SelectorCategoria(
-                    categoria = categoria,
-                    onCategoriaSelected = { categoria = it }
+                    categoria = categoriaNombre,
+                    onCategoriaSelected = { id, nombre ->
+                        categoriaId = id
+                        categoriaNombre = nombre
+                    }
                 )
             }
 
@@ -148,14 +152,14 @@ fun AddTransaccionScreen(
 
                     val montoDouble = monto.toDoubleOrNull() ?: 0.0
 
-                    if (monto.isBlank() || descripcion.isBlank() || categoria.isBlank() || fecha == 0L) {
+                    if (monto.isBlank() || descripcion.isBlank() || categoriaNombre.isBlank() || fecha == 0L) {
                         println("Faltan datos")
                         return@PrimaryButton
                     }
 
                     val movimiento = Movimiento(
-                        categoriaId = categoria,
-                        categoriaNombre = categoria,
+                        categoriaId = categoriaId,
+                        categoriaNombre = categoriaNombre,
                         tipo = if (isExpense) "gasto" else "ingreso",
                         monto = montoDouble,
                         descripcion = descripcion,
@@ -177,10 +181,18 @@ fun AddTransaccionScreen(
 @Composable
 fun SelectorCategoria(
     categoria: String,
-    onCategoriaSelected: (String) -> Unit
+    onCategoriaSelected: (String,String) -> Unit
 ) {
-
-    val categorias = listOf("Comida", "Transporte", "Salud", "Entretenimiento")
+    data class Categoria(
+        val id: String,
+        val nombre: String
+    )
+    val categorias = listOf(
+        Categoria("1", "Comida"),
+        Categoria("2", "Transporte"),
+        Categoria("3", "Salud"),
+        Categoria("4", "Entretenimiento")
+    )
 
     var expanded by remember { mutableStateOf(false) }
 
@@ -209,9 +221,9 @@ fun SelectorCategoria(
         ) {
             categorias.forEach {
                 DropdownMenuItem(
-                    text = { Text(it) },
+                    text = { Text(it.nombre) },
                     onClick = {
-                        onCategoriaSelected(it)
+                        onCategoriaSelected(it.nombre,it.id)
                         expanded = false
                     }
                 )
