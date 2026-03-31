@@ -6,5 +6,6 @@ data class Meta(
     val montoObjetivo: Double = 0.0,
     val montoAhorrado: Double = 0.0,
     val fechaLimite: Long = 0L,
+    val imageUrl: String = "",
     val creadoEn: Long = 0L
 )

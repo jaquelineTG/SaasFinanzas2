@@ -26,6 +26,7 @@ hilt = "2.51.1"
 hiltNavigationCompose = "1.2.0"
 ui = "1.10.5"
 
+
 [libraries]
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
@@ -64,6 +65,7 @@ firebase-bom={module="com.google.firebase:firebase-bom", version.ref="firebaseBo
 firebase-crashlytics={module="com.google.firebase:firebase-crashlytics"}
 firebase-auth={module="com.google.firebase:firebase-auth"}
 ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
+firebase-storage-ktx = { module = "com.google.firebase:firebase-storage-ktx" }
 
 [plugins]
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }

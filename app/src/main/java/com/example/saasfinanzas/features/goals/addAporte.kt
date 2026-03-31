@@ -17,15 +17,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.saasfinanzas.data.model.Aporte
+import com.example.saasfinanzas.data.model.Meta
+import com.example.saasfinanzas.features.components.PrimaryButton
+import kotlin.text.toLong
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddAporte(navHostController: NavHostController, metaId: String?) {
+    val viewModel: GoalViewModel= hiltViewModel()
+    val viewModelAporte: AporteViewModel= hiltViewModel()
+    val metas by viewModel.metas.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.cargarMetas()
+    }
     val meta=metas.find { meta -> meta.id==metaId }
-    var aporte by remember { mutableStateOf("0") }
+    var monto by remember { mutableStateOf("0") }
 
     Scaffold(
         topBar = {
@@ -64,11 +75,11 @@ fun AddAporte(navHostController: NavHostController, metaId: String?) {
             ) {
 
                 OutlinedTextField(
-                    value = aporte,
+                    value = monto,
                     onValueChange = {
                         //expresion regular que so0lo acepta numero y punto decimal
                         if (it.matches(Regex("^\\d*\\.?\\d*\$"))) {
-                            aporte = it
+                            monto = it
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -89,15 +100,15 @@ fun AddAporte(navHostController: NavHostController, metaId: String?) {
             ) {
 
                 QuickAddButton("+50") {
-                    aporte = (aporte.toInt() + 50).toString()
+                    monto = (monto.toInt() + 50).toString()
                 }
 
                 QuickAddButton("+100") {
-                    aporte = (aporte.toInt() + 100).toString()
+                    monto = (monto.toInt() + 100).toString()
                 }
 
                 QuickAddButton("+200") {
-                    aporte = (aporte.toInt() + 200).toString()
+                    monto = (monto.toInt() + 200).toString()
                 }
             }
 
@@ -136,7 +147,7 @@ fun AddAporte(navHostController: NavHostController, metaId: String?) {
                         )
 //poner el decripcion real
                         Text(
-                            text = meta?.descripcion ?: "",
+                            text = meta?.nombre ?: "",
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
                         )
@@ -146,21 +157,24 @@ fun AddAporte(navHostController: NavHostController, metaId: String?) {
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Button(
-                onClick = { },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-                shape = RoundedCornerShape(30.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF16C46C)
+            PrimaryButton("Guardar Aporte"){
+                if (monto.isBlank()) {
+                    println("Faltan datos")
+                    return@PrimaryButton
+                }
+
+
+                val aporte = Aporte(
+                    id = "",
+                    metaId=metaId.toString(),
+                    monto =monto.toDouble() ,
+                    fecha = System.currentTimeMillis()
+
                 )
-            ) {
-                Text(
-                    text = "Confirmar aporte",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
+
+                viewModelAporte.addAporte(aporte)
+
+                navHostController.popBackStack()
             }
         }
     }

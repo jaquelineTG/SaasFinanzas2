@@ -1,5 +1,6 @@
 package com.example.saasfinanzas.features.goals
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.saasfinanzas.data.model.Meta
@@ -12,10 +13,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class GoalViewModel @Inject constructor(
-    private val repository: MetaRepository,
-    private val authRepository: AuthRepository
-) : ViewModel() {
+    class GoalViewModel @Inject constructor(
+        private val repository: MetaRepository,
+        private val authRepository: AuthRepository
+    ) : ViewModel() {
 
     private val _metas = MutableStateFlow<List<Meta>>(emptyList())
     val metas: StateFlow<List<Meta>> = _metas
@@ -32,12 +33,13 @@ class GoalViewModel @Inject constructor(
 
 
 
-    fun addMeta( meta: Meta) {
+
+    fun addMeta( meta: Meta,imageUri: Uri?) {
 
         val uid = authRepository.getCurrentUserUid() ?: return
 
         viewModelScope.launch {
-            val result = repository.addMeta(uid,meta)
+            val result = repository.addMeta(uid,meta,imageUri)
 
             result.onSuccess {
                 println("Guardado correctamente")
@@ -46,6 +48,8 @@ class GoalViewModel @Inject constructor(
             }
         }
     }
+
+
 
 
 }

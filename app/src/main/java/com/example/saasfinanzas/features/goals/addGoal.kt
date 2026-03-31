@@ -37,20 +37,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.saasfinanzas.data.model.Meta
+import com.example.saasfinanzas.data.model.Presupuesto
 import com.example.saasfinanzas.features.components.PrimaryButton
+import com.example.saasfinanzas.features.transactions.TransactionViewModel
 import com.example.saasfinanzas.ui.theme.greenPrimary
 import com.example.saasfinanzas.ui.theme.white
+import kotlin.String
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddGoal(navHostController: NavController){
+
     var nombre by remember { mutableStateOf("") }
-    var monto by remember { mutableStateOf("") }
-    var montoInicial by remember { mutableStateOf("") }
+    var montoObjetivo by remember { mutableStateOf("") }
+    var montoAhorrado by remember { mutableStateOf("") }
     var fechaLimite by remember { mutableStateOf("") }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val viewModel: GoalViewModel = hiltViewModel()
 
     Scaffold(
         topBar = {
@@ -83,11 +92,11 @@ fun AddGoal(navHostController: NavController){
             item { Spacer(modifier = Modifier.height(20.dp)) }
             item {
                 OutlinedTextField(
-                    value = monto,
+                    value = montoObjetivo,
                     onValueChange = {
                         //expresion regular que so0lo acepta numero y punto decimal
                         if (it.matches(Regex("^\\d*\\.?\\d*\$"))) {
-                            monto = it
+                            montoObjetivo = it
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -103,11 +112,11 @@ fun AddGoal(navHostController: NavController){
             item { Spacer(modifier = Modifier.height(20.dp)) }
             item {
                 OutlinedTextField(
-                    value = montoInicial,
+                    value = montoAhorrado,
                     onValueChange = {
                         //expresion regular que so0lo acepta numero y punto decimal
                         if (it.matches(Regex("^\\d*\\.?\\d*\$"))) {
-                            montoInicial = it
+                            montoAhorrado = it
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -128,13 +137,34 @@ fun AddGoal(navHostController: NavController){
             item { Spacer(modifier = Modifier.height(20.dp)) }
 
             item {
-                ImagePicker()
+                ImagePicker { uri ->
+                    imageUri = uri
+                }
 
             }
             item { Spacer(modifier = Modifier.height(20.dp)) }
 
             item {
-                PrimaryButton("Guardar Meta", onClick = {})
+                PrimaryButton("Guardar Meta"){
+                    if (nombre.isBlank() || montoObjetivo.isBlank() || montoAhorrado.isBlank() || fechaLimite.toLong() == 0L ) {
+                        println("Faltan datos")
+                        return@PrimaryButton
+                    }
+
+                    val meta = Meta(
+                        id = "",
+                        nombre = nombre,
+                        montoObjetivo = montoObjetivo.toDoubleOrNull() ?: 0.0,
+                        montoAhorrado = montoAhorrado.toDoubleOrNull() ?: 0.0,
+                        fechaLimite = fechaLimite.toLongOrNull() ?: 0L,
+                        imageUrl = "",
+                        creadoEn = System.currentTimeMillis()
+                    )
+
+                    viewModel.addMeta(meta,imageUri)
+
+                    navHostController.popBackStack()
+                }
 
             }
 
@@ -172,8 +202,45 @@ fun FechaLimiteField(
     )
 }
 
+//@Composable
+//fun ImagePicker() {
+//
+//    var imageUri by remember { mutableStateOf<Uri?>(null) }
+//
+//    val launcher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.GetContent()
+//    ) { uri ->
+//        imageUri = uri
+//    }
+//
+//    Column(
+//        modifier = Modifier.fillMaxWidth(),
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//
+//        Button(
+//            colors = ButtonDefaults.buttonColors(
+//                containerColor = greenPrimary,
+//                contentColor = white
+//            ),
+//            onClick = { launcher.launch("image/*") },
+//
+//        ) {
+//            Text("Seleccionar Imagen")
+//        }
+//
+//        imageUri?.let {
+//            Image(
+//                painter = rememberAsyncImagePainter(it),
+//                contentDescription = null,
+//                modifier = Modifier.size(150.dp)
+//            )
+//        }
+//    }
+//}
+
 @Composable
-fun ImagePicker() {
+fun ImagePicker(onImageSelected: (Uri?) -> Unit) {
 
     var imageUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -181,21 +248,12 @@ fun ImagePicker() {
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         imageUri = uri
+        onImageSelected(uri)
     }
 
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-        Button(
-            colors = ButtonDefaults.buttonColors(
-                containerColor = greenPrimary,
-                contentColor = white
-            ),
-            onClick = { launcher.launch("image/*") },
-
-        ) {
+        Button(onClick = { launcher.launch("image/*") }) {
             Text("Seleccionar Imagen")
         }
 

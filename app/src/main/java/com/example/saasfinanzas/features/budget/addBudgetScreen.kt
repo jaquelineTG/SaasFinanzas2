@@ -84,7 +84,7 @@ fun AddBudget(navController: NavController) {
     var categoriaNombre by remember { mutableStateOf("") }
 
 
-    var monto by remember { mutableStateOf("") }
+    var montoLimite by remember { mutableStateOf("") }
 
     val calendar = Calendar.getInstance()
 
@@ -209,8 +209,8 @@ fun AddBudget(navController: NavController) {
                 Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedTextField(
-                    value = monto,
-                    onValueChange = { monto = it },
+                    value = montoLimite,
+                    onValueChange = { montoLimite = it },
                     leadingIcon = { Text("$") },
                     placeholder = { Text("0.00") },
                     modifier = Modifier.fillMaxWidth(),
@@ -330,15 +330,28 @@ fun AddBudget(navController: NavController) {
 
         PrimaryButton("Añadir Presupuesto") {
 
+            val montoDouble = montoLimite.toDoubleOrNull()
+
+            // Validaciones
+            if (
+                categoriaId.isBlank() ||
+                categoriaNombre.isBlank() ||
+                montoDouble == null || montoDouble <= 0.0 ||
+                mesNumero <= 0 ||
+                anioNumero <= 0
+            ) {
+                println("Faltan datos o son inválidos")
+                return@PrimaryButton
+            }
 
             val presupuesto = Presupuesto(
-                id="",
-                categoriaId =categoriaId ,
+                id = "",
+                categoriaId = categoriaId,
                 categoriaNombre = categoriaNombre,
-                montoLimite = monto.toDouble(),
+                montoLimite = montoDouble,
                 mes = mesNumero,
                 anio = anioNumero,
-                creadoEn =System.currentTimeMillis()
+                creadoEn = System.currentTimeMillis()
             )
 
             viewModel.addBudget(presupuesto)

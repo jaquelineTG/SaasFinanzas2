@@ -34,6 +34,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,47 +45,50 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import coil.compose.rememberAsyncImagePainter
 import com.example.saasfinanzas.R
+import com.example.saasfinanzas.data.model.Meta
 import java.time.LocalDate
 
-data class Meta(
-    val id:String,
-    val descripcion: String,
-    val imagen: Int,
-    val fechaLimite: LocalDate,
-    val objetivo: Float,
-    val ahorrado: Float
-)
+//data class Meta(
+//    val id:String,
+//    val descripcion: String,
+//    val imagen: Int,
+//    val fechaLimite: LocalDate,
+//    val objetivo: Float,
+//    val ahorrado: Float
+//)
 
 
-@RequiresApi(Build.VERSION_CODES.O)
-val metas = listOf(
-    Meta(
-        id="1",
-        descripcion = "Viaje a la playa",
-        imagen = R.drawable.playa,
-        fechaLimite = LocalDate.of(2026, 12, 20),
-        objetivo = 10000f,
-        ahorrado = 2500f
-    ),
-    Meta(
-        id="2",
-        descripcion = "Comprar laptop",
-        imagen = R.drawable.playa,
-        fechaLimite = LocalDate.of(2026, 9, 10),
-        objetivo = 15000f,
-        ahorrado = 5000f
-    ),
-    Meta(
-        id="3",
-        descripcion = "Nuevo celular",
-        imagen = R.drawable.playa,
-        fechaLimite = LocalDate.of(2026, 8, 1),
-        objetivo = 8000f,
-        ahorrado = 1200f
-    )
-)
+//@RequiresApi(Build.VERSION_CODES.O)
+//val metas = listOf(
+//    Meta(
+//        id="1",
+//        descripcion = "Viaje a la playa",
+//        imagen = R.drawable.playa,
+//        fechaLimite = LocalDate.of(2026, 12, 20),
+//        objetivo = 10000f,
+//        ahorrado = 2500f
+//    ),
+//    Meta(
+//        id="2",
+//        descripcion = "Comprar laptop",
+//        imagen = R.drawable.playa,
+//        fechaLimite = LocalDate.of(2026, 9, 10),
+//        objetivo = 15000f,
+//        ahorrado = 5000f
+//    ),
+//    Meta(
+//        id="3",
+//        descripcion = "Nuevo celular",
+//        imagen = R.drawable.playa,
+//        fechaLimite = LocalDate.of(2026, 8, 1),
+//        objetivo = 8000f,
+//        ahorrado = 1200f
+//    )
+//)
 
 
 
@@ -90,6 +96,12 @@ val metas = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GoalScreen(navHostController: NavHostController){
+    val viewModel: GoalViewModel= hiltViewModel()
+    val metas by viewModel.metas.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.cargarMetas()
+    }
     Scaffold(
         containerColor = Color(0xFFF3F4F6),
         topBar = { CenterAlignedTopAppBar(
@@ -127,7 +139,7 @@ fun GoalScreen(navHostController: NavHostController){
 @Composable
 fun ItemGoal(meta: Meta, navHostController: NavHostController) {
 
-    val progress = (meta.ahorrado / meta.objetivo)
+    val progress = (meta.montoAhorrado.toFloat() / meta.montoObjetivo.toFloat())
         .coerceIn(0f, 1f)
 
     val porcentaje = (progress * 100).toInt()
@@ -157,11 +169,21 @@ fun ItemGoal(meta: Meta, navHostController: NavHostController) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
+//imagen como imagen por defecto
+//                Image(
+//                    painter = rememberAsyncImagePainter(
+//                        model = if (meta.imageUrl.isNotEmpty()) meta.imageUrl else R.drawable.ic_image_placeholder
+//                    ),
+//                    contentDescription = meta.nombre,
+//                    modifier = Modifier
+//                        .size(70.dp)
+//                        .clip(RoundedCornerShape(12.dp))
+//                )
 
                 Image(
-                    painter = painterResource(id = meta.imagen),
-                    contentDescription = meta.descripcion,
-                    Modifier
+                    painter = rememberAsyncImagePainter(meta.imageUrl),
+                    contentDescription = meta.nombre,
+                    modifier = Modifier
                         .size(70.dp)
                         .clip(RoundedCornerShape(12.dp))
                 )
@@ -173,19 +195,19 @@ fun ItemGoal(meta: Meta, navHostController: NavHostController) {
                 ) {
 
                     Text(
-                        text = meta.descripcion,
+                        text = meta.nombre,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
 
                     Text(
-                        text = "Objetivo: $${meta.objetivo}",
+                        text = "Objetivo: $${meta.montoObjetivo}",
                         fontSize = 14.sp,
                         color = Color.Gray
                     )
 
                     Text(
-                        text = "Ahorrado: $${meta.ahorrado}",
+                        text = "Ahorrado: $${meta.montoAhorrado}",
                         fontSize = 14.sp,
                         color = Color(0xFF22C55E)
                     )

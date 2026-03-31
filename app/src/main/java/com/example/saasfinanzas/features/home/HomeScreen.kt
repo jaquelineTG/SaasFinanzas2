@@ -27,10 +27,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.saasfinanzas.data.model.Movimiento
 import com.example.saasfinanzas.features.goals.Meta
 import com.example.saasfinanzas.features.goals.metas
-import com.example.saasfinanzas.features.transactions.Transacciones
-import com.example.saasfinanzas.features.transactions.transacciones
+import com.example.saasfinanzas.features.transactions.TransactionViewModel
+
+//import com.example.saasfinanzas.features.transactions.Transacciones
+//import com.example.saasfinanzas.features.transactions.transacciones
 
 
 
@@ -50,15 +53,19 @@ import com.example.saasfinanzas.features.transactions.transacciones
 @Composable
 fun Home(navHostController: NavHostController) {
     val viewModel: HomeViewModel = hiltViewModel()
+    val viewModelTran: TransactionViewModel = hiltViewModel()
     val nombre by viewModel.nombre.collectAsState()
+    val transaccionesState=viewModelTran.movimientos.collectAsState()
+    val transacciones=transaccionesState.value
 
     LaunchedEffect(Unit) {
         viewModel.loadUser()
+        viewModelTran.cargarMovimientos()
     }
     var ingresos: Float=0.0f;
     var gastos: Float=0.0f;
     transacciones.forEach {
-        if (it.tipo=="ingreso") ingresos+= it.monto else gastos+=it.monto
+        if (it.tipo=="ingreso") ingresos+= it.monto.toFloat() else gastos+=it.monto.toFloat()
 
     }
 
@@ -250,7 +257,7 @@ fun RecentTitle() {
 }
 
 @Composable
-fun MovementItem(movimiento: Transacciones) {
+fun MovementItem(movimiento: Movimiento) {
     ElevatedCard(shape = RoundedCornerShape(20.dp)) {
 
         Row(

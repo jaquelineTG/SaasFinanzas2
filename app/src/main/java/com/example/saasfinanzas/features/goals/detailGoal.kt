@@ -18,7 +18,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.saasfinanzas.data.model.Aporte
 import java.time.LocalDate
 
 
@@ -29,28 +31,38 @@ import java.time.LocalDate
 //- monto
 //- fecha_aporte
 
-data class Aporte(
-    val monto: Float,
-    val fecha_aporte: LocalDate
-)
-
-@RequiresApi(Build.VERSION_CODES.O)
-val aportes=listOf(
-   Aporte(
-       monto=352f,
-       fecha_aporte = LocalDate.of(2026, 3, 2),
-   ),
-    Aporte(
-        monto=500f,
-        fecha_aporte = LocalDate.of(2026, 4, 20),
-    )
-
-
-)
+//data class Aporte(
+//    val monto: Float,
+//    val fecha_aporte: LocalDate
+//)
+//
+//@RequiresApi(Build.VERSION_CODES.O)
+//val aportes=listOf(
+//   Aporte(
+//       monto=352f,
+//       fecha_aporte = LocalDate.of(2026, 3, 2),
+//   ),
+//    Aporte(
+//        monto=500f,
+//        fecha_aporte = LocalDate.of(2026, 4, 20),
+//    )
+//
+//
+//)
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailGoal(navHostController: NavHostController, metaId: String?,porcentaje:String?,progress:String?) {
+
+    val viewModel: GoalViewModel= hiltViewModel()
+    val viewModelAportes: AporteViewModel= hiltViewModel()
+    val aportes by viewModelAportes.aportes.collectAsState()
+    val metas by viewModel.metas.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.cargarMetas()
+        viewModelAportes.cargarAportes()
+    }
     val meta = metas.find { it.id==metaId }
     val progreso = 0.75f
 
@@ -82,7 +94,7 @@ fun DetailGoal(navHostController: NavHostController, metaId: String?,porcentaje:
             item {
 
                 Text(
-                    text = " "+ meta?.descripcion,
+                    text = " "+ meta?.nombre,
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -90,7 +102,7 @@ fun DetailGoal(navHostController: NavHostController, metaId: String?,porcentaje:
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "Meta: "+meta?.objetivo,
+                    text = "Meta: "+meta?.montoObjetivo,
                     color = Color.Gray
                 )
             }
@@ -207,7 +219,7 @@ fun AporteItem(
                 )
 
                 Text(
-                    text = aporte.fecha_aporte.toString(),
+                    text = aporte.fecha.toString(),
                     color = Color.Gray,
                     fontSize = 12.sp
                 )

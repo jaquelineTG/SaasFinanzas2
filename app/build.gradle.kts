@@ -55,43 +55,55 @@ kapt {
 dependencies {
 
     implementation(libs.hilt.android)
-    implementation(libs.ui)
     kapt(libs.hilt.compiler)
 
-    // Para Navigation Compose + Hilt
+    // Firebase (BOM primero)
+    implementation(platform(libs.firebase.bom))
+
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.storage.ktx)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.crashlytics)
+
+    // Navigation + Hilt
     implementation(libs.androidx.hilt.navigation.compose)
 
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.crashlytics)
-    implementation(libs.firebase.auth)
+    // Red
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
-    implementation(libs.kotlinx.coroutines.play.services)
-    implementation(libs.firebase.firestore.ktx)
 
-//para las imagenes seleccionadas desde el celular del usuario
-    implementation(libs.coil.compose)
-
+    // Coroutines
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
 
-    implementation(libs.androidx.lifecycle.runtime.ktx.v262)
-    implementation(libs.androidx.lifecycle.viewmodel.ktx)
-    implementation(libs.androidx.lifecycle.runtime.compose)
-
-    implementation(libs.androidx.material.icons.extended)
+    // UI
+    implementation(libs.ui)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.navigation.compose)
 
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx.v262)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+
     implementation(libs.androidx.activity.compose)
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
+
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.animation.core.lint)
     implementation(libs.material3)
+    implementation(libs.androidx.material.icons.extended)
+
+    implementation(libs.androidx.animation.core.lint)
+
+    // Imágenes
+    implementation(libs.coil.compose)
+
+    // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
