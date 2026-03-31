@@ -49,7 +49,8 @@ fun BudgetScreen(navController: NavController) {
     val viewModel: BudgetViewModel=hiltViewModel()
     val presupuestos=viewModel.presupuestos.collectAsState()
     val viewmodelMov: TransactionViewModel=hiltViewModel()
-    val movimientos=viewmodelMov.movimientos.collectAsState()
+    val movimientosSate=viewmodelMov.movimientos.collectAsState()
+    val movimientos=movimientosSate.value
 
 
     LaunchedEffect(Unit) {
@@ -105,7 +106,16 @@ fun BudgetScreen(navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(presupuestos.value) { presupuesto ->
-                    BudgetItem(presupuesto)
+
+
+                        var sumGastos=0.0
+                        movimientos.forEach {
+                            if(it.categoriaId==presupuesto.categoriaId){
+                              sumGastos=sumGastos+it.monto;
+                        }
+
+                    }
+                    BudgetItem(presupuesto,sumGastos)
                 }
             }
         }
@@ -114,9 +124,10 @@ fun BudgetScreen(navController: NavController) {
 
 
 @Composable
-fun BudgetItem(presupuesto: Presupuesto) {
-val categoriaActual=presupuesto.categoriaNombre;
-    val progress = (presupuesto.gastoActual / presupuesto.montoLimite)
+fun BudgetItem(presupuesto: Presupuesto, sumGastos:Double) {
+
+
+    val progress: Float = (sumGastos.toFloat() / presupuesto.montoLimite.toFloat())
         .coerceIn(0f, 1f)
 
     ElevatedCard(
@@ -172,7 +183,7 @@ val categoriaActual=presupuesto.categoriaNombre;
                 }
 
                 Text(
-                    text = "$${presupuesto.gastoActual.toInt()} / $${presupuesto.montoLimite.toInt()}",
+                    text = "$${sumGastos.toInt()} / $${presupuesto.montoLimite.toInt()}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(0xFF6B7280)
                 )
