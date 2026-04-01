@@ -4,11 +4,14 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -35,8 +38,7 @@ data class CategoriaFree(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTransaccionScreen(
-    navHostController: NavController,
-
+    navController: NavController
 ) {
 
     var monto by remember { mutableStateOf("") }
@@ -45,141 +47,218 @@ fun AddTransaccionScreen(
     var categoriaNombre by remember { mutableStateOf("") }
     var fecha by remember { mutableStateOf(0L) }
     var isExpense by remember { mutableStateOf(true) }
+
     val viewModel: TransactionViewModel = hiltViewModel()
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = { Text("New Movement", fontWeight = FontWeight.SemiBold) },
-                navigationIcon = {
-                    IconButton(onClick = { navHostController.popBackStack() }) {
-                        Icon(Icons.Default.Cancel, contentDescription = "Cerrar")
-                    }
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF3F4F6))
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        item { Spacer(modifier = Modifier.height(20.dp)) }
+
+        /* 🔹 HEADER */
+        item {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+
+                IconButton(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "")
                 }
-            )
+
+                Text(
+                    "Agregar Movimiento",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
         }
-    ) { padding ->
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        item { Spacer(modifier = Modifier.height(24.dp)) }
 
-            item { Spacer(modifier = Modifier.height(20.dp)) }
+        /* 🔹 TIPO */
+        item {
+            ElevatedCard(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier.fillMaxWidth()
+            ) {
 
-            // 🔹 Tipo (Income / Expense)
-            item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFFEFEFEF), RoundedCornerShape(16.dp))
-                        .padding(4.dp)
+                        .padding(6.dp)
+                        .background(Color(0xFFF1F5F9), RoundedCornerShape(16.dp))
                 ) {
 
                     ToggleButton(
-                        text = "Income",
+                        text = "Ingreso",
                         selected = !isExpense,
                         onClick = { isExpense = false }
                     )
 
                     ToggleButton(
-                        text = "Expense",
+                        text = "Gasto",
                         selected = isExpense,
                         onClick = { isExpense = true }
                     )
                 }
             }
+        }
 
-            item { Spacer(modifier = Modifier.height(30.dp)) }
+        item { Spacer(modifier = Modifier.height(20.dp)) }
 
-            // 🔹 Monto
-            item {
-                OutlinedTextField(
-                    value = monto,
-                    onValueChange = {
-                        if (it.matches(Regex("^\\d*\\.?\\d*\$"))) {
-                            monto = it
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Amount") },
-                    placeholder = { Text("$ 0.00") },
-                    shape = RoundedCornerShape(16.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-            }
+        /* 🔹 MONTO */
+        item {
+            ElevatedCard(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier.fillMaxWidth()
+            ) {
 
-            item { Spacer(modifier = Modifier.height(20.dp)) }
+                Column(Modifier.padding(16.dp)) {
 
-            // 🔹 Descripción
-            item {
-                OutlinedTextField(
-                    value = descripcion,
-                    onValueChange = { descripcion = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Name") },
-                    placeholder = { Text("e.g. Monthly Salary") },
-                    shape = RoundedCornerShape(16.dp)
-                )
-            }
+                    Text("MONTO", color = Color.Gray)
 
-            item { Spacer(modifier = Modifier.height(20.dp)) }
+                    Spacer(modifier = Modifier.height(10.dp))
 
-            // 🔹 Categoria
-            item {
-                SelectorCategoria(
-                    categoria = categoriaNombre,
-                    onCategoriaSelected = { id, nombre ->
-                        categoriaId = id
-                        categoriaNombre = nombre
-                    }
-                )
-            }
-
-            item { Spacer(modifier = Modifier.height(20.dp)) }
-
-            // 🔹 Fecha
-            item {
-                SelectorFecha(
-                    fecha = fecha,
-                    onFechaSelected = { fecha = it }
-                )
-            }
-
-            item { Spacer(modifier = Modifier.height(40.dp)) }
-
-            //  BOTÓN GUARDAR
-            item {
-                PrimaryButton("Add Movement") {
-
-                    val montoDouble = monto.toDoubleOrNull() ?: 0.0
-
-                    if (monto.isBlank() || descripcion.isBlank() || categoriaNombre.isBlank() || fecha == 0L) {
-                        println("Faltan datos")
-                        return@PrimaryButton
-                    }
-
-                    val movimiento = Movimiento(
-                        id="",
-                        categoriaId = categoriaId,
-                        categoriaNombre = categoriaNombre,
-                        tipo = if (isExpense) "gasto" else "ingreso",
-                        monto = montoDouble,
-                        descripcion = descripcion,
-                        fecha = fecha
+                    OutlinedTextField(
+                        value = monto,
+                        onValueChange = {
+                            if (it.matches(Regex("^\\d*\\.?\\d*\$"))) {
+                                monto = it
+                            }
+                        },
+                        leadingIcon = { Text("$") },
+                        placeholder = { Text("0.00") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
-
-                    viewModel.addMovimiento(movimiento)
-
-                    navHostController.popBackStack()
                 }
             }
-
-            item { Spacer(modifier = Modifier.height(30.dp)) }
         }
+
+        item { Spacer(modifier = Modifier.height(20.dp)) }
+
+        /* 🔹 DESCRIPCIÓN */
+        item {
+            ElevatedCard(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+
+                Column(Modifier.padding(16.dp)) {
+
+                    Text("DESCRIPCIÓN", color = Color.Gray)
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = descripcion,
+                        onValueChange = { descripcion = it },
+                        placeholder = { Text("Ej. Pago de renta") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp)
+                    )
+                }
+            }
+        }
+
+        item { Spacer(modifier = Modifier.height(20.dp)) }
+
+        /* 🔹 CATEGORÍA */
+        item {
+            ElevatedCard(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+
+                Column(Modifier.padding(16.dp)) {
+
+                    Text("CATEGORÍA", color = Color.Gray)
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    SelectorCategoria(
+                        categoria = categoriaNombre,
+                        onCategoriaSelected = { id, nombre ->
+                            categoriaId = id
+                            categoriaNombre = nombre
+                        }
+                    )
+                }
+            }
+        }
+
+        item { Spacer(modifier = Modifier.height(20.dp)) }
+
+        /* 🔹 FECHA */
+        item {
+            ElevatedCard(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+
+                Column(Modifier.padding(16.dp)) {
+
+                    Text("FECHA", color = Color.Gray)
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    SelectorFecha(
+                        fecha = fecha,
+                        onFechaSelected = { fecha = it }
+                    )
+                }
+            }
+        }
+
+        item { Spacer(modifier = Modifier.height(30.dp)) }
+
+        /* 🔹 BOTÓN */
+        item {
+            PrimaryButton("Guardar Movimiento") {
+
+                val montoDouble = monto.toDoubleOrNull() ?: 0.0
+
+                if (
+                    monto.isBlank() ||
+                    descripcion.isBlank() ||
+                    categoriaNombre.isBlank() ||
+                    fecha == 0L
+                ) {
+                    println("Faltan datos")
+                    return@PrimaryButton
+                }
+
+                val movimiento = Movimiento(
+                    id = "",
+                    categoriaId = categoriaId,
+                    categoriaNombre = categoriaNombre,
+                    tipo = if (isExpense) "gasto" else "ingreso",
+                    monto = montoDouble,
+                    descripcion = descripcion,
+                    fecha = fecha
+                )
+
+                viewModel.addMovimiento(movimiento)
+
+                navController.popBackStack()
+            }
+        }
+
+        item { Spacer(modifier = Modifier.height(30.dp)) }
     }
 }
 
@@ -305,7 +384,10 @@ fun RowScope.ToggleButton(
                 if (selected) Color.White else Color.Transparent,
                 RoundedCornerShape(12.dp)
             )
-            .clickable { onClick() }
+            .clickable(
+                indication = null, //quita efecto (sombra/ripple)
+                interactionSource = remember { MutableInteractionSource() }
+            ) { onClick() }
             .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center
     ) {

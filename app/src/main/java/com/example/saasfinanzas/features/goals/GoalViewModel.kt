@@ -8,11 +8,12 @@ import com.example.saasfinanzas.data.model.Movimiento
 import com.example.saasfinanzas.data.repository.AuthRepository
 import com.example.saasfinanzas.data.repository.MetaRepository
 import com.example.saasfinanzas.data.repository.TransactionRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
+@HiltViewModel
     class GoalViewModel @Inject constructor(
         private val repository: MetaRepository,
         private val authRepository: AuthRepository

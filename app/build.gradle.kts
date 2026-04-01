@@ -60,8 +60,8 @@ dependencies {
     // Firebase (BOM primero)
     implementation(platform(libs.firebase.bom))
 
-    implementation(libs.firebase.firestore.ktx)
-    implementation(libs.firebase.storage.ktx)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.storage)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.crashlytics)
 
@@ -78,12 +78,10 @@ dependencies {
     implementation(libs.kotlinx.coroutines.play.services)
 
     // UI
-    implementation(libs.ui)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.navigation.compose)
 
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx.v262)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
 
@@ -95,10 +93,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
 
     implementation(libs.androidx.material3)
-    implementation(libs.material3)
     implementation(libs.androidx.material.icons.extended)
-
-    implementation(libs.androidx.animation.core.lint)
 
     // Imágenes
     implementation(libs.coil.compose)

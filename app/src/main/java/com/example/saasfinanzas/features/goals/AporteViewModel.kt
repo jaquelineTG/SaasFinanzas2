@@ -7,11 +7,12 @@ import com.example.saasfinanzas.data.model.Meta
 import com.example.saasfinanzas.data.repository.AporteRepository
 import com.example.saasfinanzas.data.repository.AuthRepository
 import com.example.saasfinanzas.data.repository.MetaRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
+@HiltViewModel
 class AporteViewModel @Inject constructor(
     private val repository: AporteRepository,
     private val authRepository: AuthRepository

@@ -27,9 +27,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.saasfinanzas.data.model.Meta
 import com.example.saasfinanzas.data.model.Movimiento
-import com.example.saasfinanzas.features.goals.Meta
-import com.example.saasfinanzas.features.goals.metas
+import com.example.saasfinanzas.features.goals.GoalViewModel
+
 import com.example.saasfinanzas.features.transactions.TransactionViewModel
 
 //import com.example.saasfinanzas.features.transactions.Transacciones
@@ -53,14 +54,17 @@ import com.example.saasfinanzas.features.transactions.TransactionViewModel
 @Composable
 fun Home(navHostController: NavHostController) {
     val viewModel: HomeViewModel = hiltViewModel()
+    val viewModelMeta: GoalViewModel = hiltViewModel()
     val viewModelTran: TransactionViewModel = hiltViewModel()
     val nombre by viewModel.nombre.collectAsState()
-    val transaccionesState=viewModelTran.movimientos.collectAsState()
-    val transacciones=transaccionesState.value
+    val transacciones by viewModelTran.movimientos.collectAsState()
+    val metas by viewModelMeta.metas.collectAsState()
+
 
     LaunchedEffect(Unit) {
         viewModel.loadUser()
         viewModelTran.cargarMovimientos()
+        viewModelMeta.cargarMetas()
     }
     var ingresos: Float=0.0f;
     var gastos: Float=0.0f;
@@ -69,7 +73,7 @@ fun Home(navHostController: NavHostController) {
 
     }
 
-    var meta=metas.last()
+    var meta=metas.lastOrNull()
     val ultimos = transacciones.takeLast(3)
 
     Scaffold(
@@ -103,7 +107,9 @@ fun Home(navHostController: NavHostController) {
 
             item { IncomeExpense(ingresos,gastos) }
 
-            item { GoalCard(meta) }
+            meta?.let {
+                item { GoalCard(meta) }
+            }
 
             item { RecentTitle() }
 
@@ -212,7 +218,7 @@ fun CardInfo(
 
 @Composable
 fun GoalCard(meta: Meta) {
-    val progress = (meta.ahorrado / meta.objetivo)
+    val progress = (meta.montoAhorrado.toFloat() / meta.montoObjetivo.toFloat())
         .coerceIn(0f, 1f)
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1B4332)),
@@ -222,7 +228,7 @@ fun GoalCard(meta: Meta) {
 
             Text("Meta de Ahorro", color = Color.White.copy(0.7f))
             Text(
-                meta.descripcion,
+                meta.nombre,
                 color = Color.White,
                 fontWeight = FontWeight.Bold
             )
@@ -238,7 +244,7 @@ fun GoalCard(meta: Meta) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                "$${meta.objetivo} / $${meta.ahorrado} acumulado",
+                "$${meta.montoObjetivo} / $${meta.montoAhorrado} acumulado",
                 color = Color.White.copy(0.7f)
             )
         }
