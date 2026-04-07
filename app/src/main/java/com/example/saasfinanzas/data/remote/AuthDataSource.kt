@@ -1,6 +1,8 @@
 package com.example.saasfinanzas.data.remote
 
 
+import com.example.saasfinanzas.data.model.Usuario
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import kotlinx.coroutines.tasks.await
@@ -58,7 +60,7 @@ private val firestore = FirebaseFirestore.getInstance()
         }
     }
 
-    suspend fun getUserData(): Result<String> {
+    suspend fun getUserData(): Result<Usuario> {
         return try {
             val uid = auth.currentUser?.uid ?: throw Exception("No user")
 
@@ -67,14 +69,17 @@ private val firestore = FirebaseFirestore.getInstance()
                 .get()
                 .await()
 
-            val nombre = document.getString("nombre") ?: ""
-
-            Result.success(nombre)
+            val usuario = Usuario(
+                nombre = document.getString("nombre") ?: "",
+                correo = document.getString("email") ?: ""
+            )
+            Result.success(usuario)
 
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
 
     suspend fun login(
         email: String,
@@ -96,4 +101,27 @@ private val firestore = FirebaseFirestore.getInstance()
     }
 
     fun getCurrentUser() = auth.currentUser
+
+    suspend fun changePassword(
+        currentPassword: String,
+        newPassword: String
+    ): Result<String> {
+        return try {
+            val user = auth.currentUser ?: throw Exception("No user")
+            val email = user.email ?: throw Exception("No email")
+
+            val credential = EmailAuthProvider.getCredential(email, currentPassword)
+
+            // Reautenticar
+            user.reauthenticate(credential).await()
+
+            // Cambiar contraseña
+            user.updatePassword(newPassword).await()
+
+            Result.success("se cambio la contraseña con exito")
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

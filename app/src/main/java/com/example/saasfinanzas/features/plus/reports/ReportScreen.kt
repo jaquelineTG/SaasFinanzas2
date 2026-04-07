@@ -24,24 +24,25 @@ import androidx.compose.foundation.lazy.items
 @Composable
 fun ReportScreen(navHostController: NavHostController) {
 
-    var selectedTab by remember { mutableStateOf("Weekly") }
+    var selectedTab by remember { mutableStateOf("Semanal") }
 
-    Scaffold (
+    Scaffold(
 
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Reportes") },
                 navigationIcon = {
-                    IconButton(onClick = {navHostController.popBackStack() }) {
+                    IconButton(onClick = { navHostController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "volver")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFFF3F4F6),
                     scrolledContainerColor = Color(0xFFF3F4F6)
-                ))
+                )
+            )
         }
-    ){ padding ->
+    ) { padding ->
 
         LazyColumn(
             modifier = Modifier
@@ -52,8 +53,6 @@ fun ReportScreen(navHostController: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-
-
             // TABS
             item {
                 Row(
@@ -62,13 +61,13 @@ fun ReportScreen(navHostController: NavHostController) {
                         .background(Color(0xFFDDE6DD))
                         .padding(4.dp)
                 ) {
-                    listOf("Weekly", "Monthly", "Yearly").forEach { tab ->
+                    listOf("Semanal", "Mensual", "Anual").forEach { tab ->
                         val selected = tab == selectedTab
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(50))
                                 .background(if (selected) Color.White else Color.Transparent)
-                                .clickable { selectedTab = tab } //  importante
+                                .clickable { selectedTab = tab }
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
                         ) {
                             Text(tab)
@@ -78,7 +77,7 @@ fun ReportScreen(navHostController: NavHostController) {
                 }
             }
 
-            // TOTAL SPENT
+            // TOTAL GASTADO
             item {
                 Card(
                     shape = RoundedCornerShape(20.dp),
@@ -86,7 +85,7 @@ fun ReportScreen(navHostController: NavHostController) {
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
 
-                        Text("Total Spent")
+                        Text("Total gastado")
                         Text("$3,240.50", style = MaterialTheme.typography.headlineMedium)
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -97,20 +96,20 @@ fun ReportScreen(navHostController: NavHostController) {
                                 .background(Color(0xFFD1F2E0))
                                 .padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
-                            Text("12% vs last week")
+                            Text("12% vs la semana pasada")
                         }
 
                         Spacer(modifier = Modifier.height(60.dp))
 
                         Text(
-                            "MON   TUE   WED   THU   FRI   SAT   SUN",
+                            "LUN   MAR   MIÉ   JUE   VIE   SÁB   DOM",
                             style = MaterialTheme.typography.labelSmall
                         )
                     }
                 }
             }
 
-            // TOP CATEGORIES
+            // CATEGORÍAS PRINCIPALES
             item {
                 Card(
                     shape = RoundedCornerShape(20.dp),
@@ -118,40 +117,40 @@ fun ReportScreen(navHostController: NavHostController) {
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
 
-                        Text("Top Categories")
+                        Text("Categorías principales")
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        CategoryItem("Food", "$840.00", 0.8f)
-                        CategoryItem("Transport", "$320.00", 0.3f)
-                        CategoryItem("Entertainment", "$450.00", 0.5f)
-                        CategoryItem("Bills", "$1,630.50", 0.9f)
+                        CategoryItem("Comida", "$840.00", 0.8f)
+                        CategoryItem("Transporte", "$320.00", 0.3f)
+                        CategoryItem("Entretenimiento", "$450.00", 0.5f)
+                        CategoryItem("Servicios", "$1,630.50", 0.9f)
                     }
                 }
             }
 
-            // HISTORY HEADER
+            // HISTORIAL HEADER
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("History", style = MaterialTheme.typography.titleMedium)
-                    Text("View All", color = Color(0xFF1DB954))
+                    Text("Historial", style = MaterialTheme.typography.titleMedium)
+                    Text("Ver todo", color = Color(0xFF1DB954))
                 }
             }
 
-            // HISTORY LIST ( aquí puedes usar items si luego viene de API)
+            // HISTORIAL LISTA
             items(
                 listOf(
-                    "Whole Foods Market" to "-$142.30",
-                    "Electric Utility" to "-$89.00"
+                    "Supermercado" to "-$142.30",
+                    "Luz eléctrica" to "-$89.00"
                 )
             ) { (title, amount) ->
                 HistoryItem(title, amount)
             }
 
-            // BUDGET CARD
+            // TARJETA PRESUPUESTO
             item {
                 Card(
                     shape = RoundedCornerShape(20.dp),
@@ -159,10 +158,10 @@ fun ReportScreen(navHostController: NavHostController) {
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
 
-                        Text("MONTHLY BUDGET", color = Color.White)
+                        Text("PRESUPUESTO MENSUAL", color = Color.White)
 
                         Text(
-                            "You're doing great this week!",
+                            "¡Lo estás haciendo muy bien esta semana!",
                             color = Color.White,
                             style = MaterialTheme.typography.titleLarge
                         )
@@ -170,7 +169,7 @@ fun ReportScreen(navHostController: NavHostController) {
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            "You've spent 20% less on Entertainment compared to last month.",
+                            "Has gastado 20% menos en entretenimiento comparado con el mes pasado.",
                             color = Color.White
                         )
 
@@ -180,7 +179,7 @@ fun ReportScreen(navHostController: NavHostController) {
                             onClick = { },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.White)
                         ) {
-                            Text("Adjust Budgets", color = Color.Black)
+                            Text("Ajustar presupuestos", color = Color.Black)
                         }
                     }
                 }
@@ -188,7 +187,6 @@ fun ReportScreen(navHostController: NavHostController) {
         }
     }
 }
-
 @Composable
 fun CategoryItem(title: String, amount: String, progress: Float) {
     Column(modifier = Modifier.fillMaxWidth()) {

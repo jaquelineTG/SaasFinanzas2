@@ -56,13 +56,13 @@ fun Home(navHostController: NavHostController) {
     val viewModel: HomeViewModel = hiltViewModel()
     val viewModelMeta: GoalViewModel = hiltViewModel()
     val viewModelTran: TransactionViewModel = hiltViewModel()
-    val nombre by viewModel.nombre.collectAsState()
+    val currentUser by viewModel.currentUser.collectAsState()
     val transacciones by viewModelTran.movimientos.collectAsState()
     val metas by viewModelMeta.metas.collectAsState()
 
 
     LaunchedEffect(Unit) {
-        viewModel.loadUser()
+        viewModel.userData()
         viewModelTran.cargarMovimientos()
         viewModelMeta.cargarMetas()
     }
@@ -101,7 +101,7 @@ fun Home(navHostController: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            item { Header(nombre) }
+            item { Header(currentUser?.nombre ?: "") }
 
             item { BalanceSection(ingresos,gastos) }
 

@@ -25,6 +25,7 @@ import com.example.saasfinanzas.features.goals.DetailGoal
 import com.example.saasfinanzas.features.goals.GoalScreen
 import com.example.saasfinanzas.features.home.Home
 import com.example.saasfinanzas.features.plus.PlusScreen
+import com.example.saasfinanzas.features.plus.configuration.ChangePasswordScreen
 import com.example.saasfinanzas.features.plus.configuration.ConfigurationScreen
 import com.example.saasfinanzas.features.plus.premium.PremiumScreen
 import com.example.saasfinanzas.features.plus.reports.ReportScreen
@@ -142,6 +143,9 @@ fun NavigationWrapper(navHostController: NavHostController) {
 
             composable("configuracion") {
                 ConfigurationScreen(navHostController)
+            }
+            composable("cambiarContraseña") {
+                ChangePasswordScreen(navHostController)
             }
 
             composable("reportes") {

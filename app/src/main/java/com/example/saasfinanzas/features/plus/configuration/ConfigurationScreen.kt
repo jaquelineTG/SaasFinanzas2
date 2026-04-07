@@ -35,6 +35,13 @@ fun ConfigurationScreen(navHostController: NavHostController) {
     var transactionAlerts by remember { mutableStateOf(true) }
     var budgetAlerts by remember { mutableStateOf(false) }
     val viewModel: AuthViewModel = hiltViewModel()
+    val viewModelConf:ConfigurationViewModel=hiltViewModel()
+    val currentUser by viewModelConf.currentUser.collectAsState()
+    LaunchedEffect(Unit) {
+        viewModelConf.userData()
+
+    }
+
 
     Scaffold(
         containerColor = Color(0xFFF3F4F6),
@@ -93,21 +100,12 @@ fun ConfigurationScreen(navHostController: NavHostController) {
                             )
                         }
 
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFF1DB954)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.Edit, contentDescription = null, tint = Color.White)
-                        }
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Text("Alexandria Sterling", style = MaterialTheme.typography.titleMedium)
-                    Text("alex.sterling@curator.io", style = MaterialTheme.typography.bodySmall)
+                    Text(currentUser?.nombre ?: "", style = MaterialTheme.typography.titleMedium)
+                    Text(currentUser?.correo ?: "", style = MaterialTheme.typography.bodySmall)
 
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -125,7 +123,7 @@ fun ConfigurationScreen(navHostController: NavHostController) {
             item {
                 SectionCard("Seguridad", Icons.Outlined.Security) {
 
-                    RowItem(Icons.Outlined.Lock, "Cambiar Contraseña")
+                    RowItem(Icons.Outlined.Lock, "Cambiar Contraseña",navHostController)
 
                 }
             }
@@ -204,12 +202,13 @@ fun SectionCard(
 @Composable
 fun RowItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
-    text: String
+    text: String,
+    navHostController: NavHostController
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { }
+            .clickable {navHostController.navigate("cambiarContraseña") }
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
