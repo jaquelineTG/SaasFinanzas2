@@ -22,6 +22,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.saasfinanzas.data.model.Aporte
 import com.example.saasfinanzas.data.model.Meta
+import com.example.saasfinanzas.features.components.Alert
 import com.example.saasfinanzas.features.components.PrimaryButton
 import kotlin.text.toLong
 
@@ -182,6 +183,8 @@ fun AddAporte(navController: NavHostController, metaId: String?) {
 
                 navController.popBackStack()
             }
+
+            //Alert()
         }
 
         item { Spacer(modifier = Modifier.height(30.dp)) }

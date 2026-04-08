@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.saasfinanzas.data.model.Movimiento
+import com.example.saasfinanzas.features.components.Alert
 import com.example.saasfinanzas.features.components.PrimaryButton
 import com.google.firebase.auth.FirebaseAuth
 import java.time.Instant
@@ -47,6 +48,7 @@ fun AddTransaccionScreen(
     var categoriaNombre by remember { mutableStateOf("") }
     var fecha by remember { mutableStateOf(0L) }
     var isExpense by remember { mutableStateOf(true) }
+    var showDialog by remember { mutableStateOf(false) }
 
     val viewModel: TransactionViewModel = hiltViewModel()
 
@@ -238,7 +240,9 @@ fun AddTransaccionScreen(
                     categoriaNombre.isBlank() ||
                     fecha == 0L
                 ) {
-                    println("Faltan datos")
+
+
+                   showDialog=true
                     return@PrimaryButton
                 }
 
@@ -256,6 +260,7 @@ fun AddTransaccionScreen(
 
                 navController.popBackStack()
             }
+            Alert("Agrega todos los datos del formulario","Datos Imcompletos",showDialog)
         }
 
         item { Spacer(modifier = Modifier.height(30.dp)) }

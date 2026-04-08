@@ -52,6 +52,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.saasfinanzas.data.model.Movimiento
 import com.example.saasfinanzas.data.model.Presupuesto
+import com.example.saasfinanzas.features.components.Alert
 import com.example.saasfinanzas.features.components.PrimaryButton
 import com.example.saasfinanzas.features.transactions.CategoriaFree
 import com.example.saasfinanzas.features.transactions.TransactionViewModel
@@ -101,6 +102,7 @@ fun AddBudget(navController: NavController) {
     val anioNumero = anioSeleccionado.toInt()
     var expandedMes by remember { mutableStateOf(false) }
     var expandedAnio by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -341,6 +343,7 @@ fun AddBudget(navController: NavController) {
                 anioNumero <= 0
             ) {
                 println("Faltan datos o son inválidos")
+
                 return@PrimaryButton
             }
 
@@ -358,6 +361,8 @@ fun AddBudget(navController: NavController) {
 
             navController.popBackStack()
         }
+
+        Alert("Faltan datos o son inválidos","Datos Imcompletos",showDialog)
     }
 }
 
