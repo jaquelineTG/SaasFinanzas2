@@ -148,7 +148,7 @@ fun AddTransaccionScreen(
 
         item { Spacer(modifier = Modifier.height(20.dp)) }
 
-        /* 🔹 DESCRIPCIÓN */
+        /* DESCRIPCIÓN */
         item {
             ElevatedCard(
                 shape = RoundedCornerShape(24.dp),
@@ -305,7 +305,7 @@ fun SelectorCategoria(
                 DropdownMenuItem(
                     text = { Text(it.nombre) },
                     onClick = {
-                        onCategoriaSelected(it.nombre,it.id)
+                        onCategoriaSelected(it.id,it.nombre)
                         expanded = false
                     }
                 )
@@ -326,6 +326,7 @@ fun SelectorFecha(
 
     val datePickerState = rememberDatePickerState()
 
+    // Convertir millis a texto bonito
     val fechaTexto = fecha.takeIf { it != 0L }?.let {
         Instant.ofEpochMilli(it)
             .atZone(ZoneId.systemDefault())
@@ -335,25 +336,45 @@ fun SelectorFecha(
 
     Column {
 
-        OutlinedTextField(
-            value = fechaTexto,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("Fecha") },
-            placeholder = { Text("Selecciona una fecha") },
+        //  BOX para que TODO sea clickeable
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { showDialog = true }
-        )
+        ) {
+
+            OutlinedTextField(
+                value = fechaTexto,
+                onValueChange = {},
+                readOnly = true,
+                enabled = false, // importante
+                label = { Text("Fecha") },
+                placeholder = { Text("Selecciona una fecha") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
         if (showDialog) {
             DatePickerDialog(
                 onDismissRequest = { showDialog = false },
                 confirmButton = {
                     TextButton(onClick = {
-                        datePickerState.selectedDateMillis?.let {
-                            onFechaSelected(it)
+
+                        datePickerState.selectedDateMillis?.let { millis ->
+
+                            // FIX TIMEZONE (SOLUCIÓN REAL)
+                            val localDate = Instant.ofEpochMilli(millis)
+                                .atZone(ZoneId.of("UTC"))
+                                .toLocalDate()
+
+                            val correctedMillis = localDate
+                                .atStartOfDay(ZoneId.systemDefault())
+                                .toInstant()
+                                .toEpochMilli()
+
+                            onFechaSelected(correctedMillis)
                         }
+
                         showDialog = false
                     }) {
                         Text("Aceptar")

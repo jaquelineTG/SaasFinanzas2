@@ -120,7 +120,8 @@ fun TransactionsScreen(navHostController: NavController) {
                 transaccionItem(
                     categoriaNombre = transaccion.categoriaNombre,
                     monto = transaccion.monto,
-                    descripcion = transaccion.descripcion
+                    descripcion = transaccion.descripcion,
+                    tipo=transaccion.tipo
                 )
             }
         }
@@ -142,7 +143,8 @@ fun getIconByCategory(categoria: String): ImageVector {
 fun transaccionItem(
     categoriaNombre: String,
     monto: Double,
-    descripcion: String
+    descripcion: String,
+    tipo:String
 ) {
 
 
@@ -198,7 +200,7 @@ fun transaccionItem(
             }
 
             Text(
-                text = "$${"%.2f".format(monto)}",
+                text = "$${"%.2f".format(if (tipo=="gasto") "-$monto" else monto)}",
                 style = MaterialTheme.typography.titleMedium,
                 color = Color(0xFF22C55E)
             )

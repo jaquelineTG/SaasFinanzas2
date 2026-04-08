@@ -26,8 +26,30 @@ fun ReportScreen(navHostController: NavHostController) {
 
     var selectedTab by remember { mutableStateOf("Semanal") }
 
-    Scaffold(
+    // 🔥 SIMULACIÓN (luego lo conectas con tu usuario real)
+    val isPremium = false
 
+    // 🔒 Categorías FREE
+    val categoriasFree = listOf(
+        Triple("Comida", "$840.00", 0.8f),
+        Triple("Transporte", "$320.00", 0.3f),
+        Triple("Salud", "$200.00", 0.2f),
+        Triple("Entretenimiento", "$450.00", 0.5f)
+    )
+
+    // 💎 Categorías PREMIUM
+    val categoriasPremium = listOf(
+        Triple("Comida", "$840.00", 0.8f),
+        Triple("Transporte", "$320.00", 0.3f),
+        Triple("Salud", "$200.00", 0.2f),
+        Triple("Entretenimiento", "$450.00", 0.5f),
+        Triple("Servicios", "$1,630.50", 0.9f),
+        Triple("Educación", "$500.00", 0.4f)
+    )
+
+    val categorias = if (isPremium) categoriasPremium else categoriasFree
+
+    Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Reportes") },
@@ -35,11 +57,7 @@ fun ReportScreen(navHostController: NavHostController) {
                     IconButton(onClick = { navHostController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "volver")
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF3F4F6),
-                    scrolledContainerColor = Color(0xFFF3F4F6)
-                )
+                }
             )
         }
     ) { padding ->
@@ -79,10 +97,7 @@ fun ReportScreen(navHostController: NavHostController) {
 
             // TOTAL GASTADO
             item {
-                Card(
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                Card(shape = RoundedCornerShape(20.dp)) {
                     Column(modifier = Modifier.padding(16.dp)) {
 
                         Text("Total gastado")
@@ -90,16 +105,24 @@ fun ReportScreen(navHostController: NavHostController) {
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(50))
-                                .background(Color(0xFFD1F2E0))
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
-                        ) {
-                            Text("12% vs la semana pasada")
+                        // 🔒 COMPARACIÓN BLOQUEADA
+                        if (isPremium) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(50))
+                                    .background(Color(0xFFD1F2E0))
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Text("12% vs la semana pasada")
+                            }
+                        } else {
+                            Text(
+                                "🔒 Comparaciones disponibles en Premium",
+                                color = Color.Gray
+                            )
                         }
 
-                        Spacer(modifier = Modifier.height(60.dp))
+                        Spacer(modifier = Modifier.height(40.dp))
 
                         Text(
                             "LUN   MAR   MIÉ   JUE   VIE   SÁB   DOM",
@@ -109,7 +132,7 @@ fun ReportScreen(navHostController: NavHostController) {
                 }
             }
 
-            // CATEGORÍAS PRINCIPALES
+            // CATEGORÍAS DINÁMICAS
             item {
                 Card(
                     shape = RoundedCornerShape(20.dp),
@@ -121,10 +144,18 @@ fun ReportScreen(navHostController: NavHostController) {
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        CategoryItem("Comida", "$840.00", 0.8f)
-                        CategoryItem("Transporte", "$320.00", 0.3f)
-                        CategoryItem("Entretenimiento", "$450.00", 0.5f)
-                        CategoryItem("Servicios", "$1,630.50", 0.9f)
+                        categorias.forEach { (title, amount, progress) ->
+                            CategoryItem(title, amount, progress)
+                        }
+
+                        // 🔒 MENSAJE SI ES FREE
+                        if (!isPremium) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                "🔒 Más categorías en Premium",
+                                color = Color.Gray
+                            )
+                        }
                     }
                 }
             }
@@ -150,36 +181,54 @@ fun ReportScreen(navHostController: NavHostController) {
                 HistoryItem(title, amount)
             }
 
-            // TARJETA PRESUPUESTO
-            item {
-                Card(
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF00C853))
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
+            // 🔒 TARJETA PREMIUM (UPSSELL)
+            if (!isPremium) {
+                item {
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.LightGray)
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
 
-                        Text("PRESUPUESTO MENSUAL", color = Color.White)
+                            Text("Funciones Premium 🔒")
 
-                        Text(
-                            "¡Lo estás haciendo muy bien esta semana!",
-                            color = Color.White,
-                            style = MaterialTheme.typography.titleLarge
-                        )
+                            Text(
+                                "Desbloquea comparaciones, más categorías y análisis avanzados."
+                            )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
-                        Text(
-                            "Has gastado 20% menos en entretenimiento comparado con el mes pasado.",
-                            color = Color.White
-                        )
+                            Button(onClick = { /* ir a pantalla de pago */ }) {
+                                Text("Mejorar a Premium")
+                            }
+                        }
+                    }
+                }
+            }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+            // TARJETA PRESUPUESTO (solo premium)
+            if (isPremium) {
+                item {
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF00C853))
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
 
-                        Button(
-                            onClick = { },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White)
-                        ) {
-                            Text("Ajustar presupuestos", color = Color.Black)
+                            Text("PRESUPUESTO MENSUAL", color = Color.White)
+
+                            Text(
+                                "¡Lo estás haciendo muy bien esta semana!",
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                "Has gastado 20% menos en entretenimiento comparado con el mes pasado.",
+                                color = Color.White
+                            )
                         }
                     }
                 }
