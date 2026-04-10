@@ -19,35 +19,54 @@ import androidx.navigation.NavHostController
 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.saasfinanzas.data.model.Categoria
+import com.example.saasfinanzas.data.model.Movimiento
+import com.example.saasfinanzas.data.model.Presupuesto
+import com.example.saasfinanzas.features.budget.BudgetViewModel
+import com.example.saasfinanzas.features.transactions.TransactionViewModel
+import com.example.saasfinanzas.features.transactions.categoriasFree
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportScreen(navHostController: NavHostController) {
 
     var selectedTab by remember { mutableStateOf("Semanal") }
+    val viewModel: TransactionViewModel = hiltViewModel()
+    val movimientos by viewModel.movimientos.collectAsState()
+    val viewModelPresupuesto: BudgetViewModel=hiltViewModel()
+    val presupuestosState=viewModelPresupuesto.presupuestos.collectAsState()
+    val presupuestos=presupuestosState.value
 
-    // 🔥 SIMULACIÓN (luego lo conectas con tu usuario real)
+
+
+    LaunchedEffect(Unit) {
+        viewModel.cargarMovimientos()
+        viewModelPresupuesto.getBudgets()
+    }
+
+    val gastos: List<Movimiento> =movimientos.filter { it.tipo=="gasto" }
+    var gastosTotal:Double=0.0
+    gastos.forEach { movimiento ->
+         gastosTotal= gastosTotal+movimiento.monto
+    }
+
+    //  SIMULACIÓN (luego lo conectas con tu usuario real)
     val isPremium = false
 
-    // 🔒 Categorías FREE
-    val categoriasFree = listOf(
-        Triple("Comida", "$840.00", 0.8f),
-        Triple("Transporte", "$320.00", 0.3f),
-        Triple("Salud", "$200.00", 0.2f),
-        Triple("Entretenimiento", "$450.00", 0.5f)
-    )
 
-    // 💎 Categorías PREMIUM
-    val categoriasPremium = listOf(
-        Triple("Comida", "$840.00", 0.8f),
-        Triple("Transporte", "$320.00", 0.3f),
-        Triple("Salud", "$200.00", 0.2f),
-        Triple("Entretenimiento", "$450.00", 0.5f),
-        Triple("Servicios", "$1,630.50", 0.9f),
-        Triple("Educación", "$500.00", 0.4f)
-    )
-
-    val categorias = if (isPremium) categoriasPremium else categoriasFree
+    // Categorías PREMIUM
+//    val categoriasPremium = listOf(
+//        Triple("Comida", "$840.00", 0.8f),
+//        Triple("Transporte", "$320.00", 0.3f),
+//        Triple("Salud", "$200.00", 0.2f),
+//        Triple("Entretenimiento", "$450.00", 0.5f),
+//        Triple("Servicios", "$1,630.50", 0.9f),
+//        Triple("Educación", "$500.00", 0.4f)
+//    )
+//
+//    val categorias = if (isPremium) categoriasPremium else categoriasFree
+    val categorias =categoriasFree
 
     Scaffold(
         topBar = {
@@ -101,11 +120,11 @@ fun ReportScreen(navHostController: NavHostController) {
                     Column(modifier = Modifier.padding(16.dp)) {
 
                         Text("Total gastado")
-                        Text("$3,240.50", style = MaterialTheme.typography.headlineMedium)
+                        Text("$${gastosTotal}", style = MaterialTheme.typography.headlineMedium)
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // 🔒 COMPARACIÓN BLOQUEADA
+                        //  COMPARACIÓN BLOQUEADA
                         if (isPremium) {
                             Box(
                                 modifier = Modifier
@@ -144,8 +163,17 @@ fun ReportScreen(navHostController: NavHostController) {
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        categorias.forEach { (title, amount, progress) ->
-                            CategoryItem(title, amount, progress)
+                        categorias.forEach { categoria ->
+                            var gastosCategoria=0.0
+                            gastos.forEach { mov->
+                                if (mov.categoriaId==categoria.id){
+                                    gastosCategoria=gastosCategoria+mov.monto
+                                }
+                            }
+
+
+
+                            CategoryItem(categoria,gastosCategoria,presupuestos)
                         }
 
                         // 🔒 MENSAJE SI ES FREE
@@ -237,15 +265,24 @@ fun ReportScreen(navHostController: NavHostController) {
     }
 }
 @Composable
-fun CategoryItem(title: String, amount: String, progress: Float) {
+fun CategoryItem(categoria: Categoria, gastosCategoy: Double,presupuestos: List<Presupuesto>) {
+    var presupuesto=0.0
+   presupuestos.forEach { presupuestoCat ->
+       if(presupuestoCat.categoriaId==categoria.id){
+           presupuesto=presupuestoCat.montoLimite.toDouble()
+       }
+   }
+
+    val progress: Float = (gastosCategoy.toFloat() / presupuesto.toFloat())
+        .coerceIn(0f, 1f)
     Column(modifier = Modifier.fillMaxWidth()) {
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(title)
-            Text(amount)
+            Text(categoria.nombre)
+            Text("$$gastosCategoy")
         }
 
         LinearProgressIndicator(

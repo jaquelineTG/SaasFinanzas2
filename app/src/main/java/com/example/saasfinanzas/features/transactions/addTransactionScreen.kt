@@ -23,6 +23,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.saasfinanzas.data.model.Categoria
 import com.example.saasfinanzas.data.model.Movimiento
 import com.example.saasfinanzas.features.components.Alert
 import com.example.saasfinanzas.features.components.PrimaryButton
@@ -31,9 +32,13 @@ import java.time.Instant
 import java.time.ZoneId
 
 
-data class CategoriaFree(
-    val id: String,
-    val nombre: String
+
+
+val categoriasFree = listOf(
+    Categoria("1", "Comida"),
+    Categoria("2", "Transporte"),
+    Categoria("3", "Salud"),
+    Categoria("4", "Entretenimiento")
 )
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -274,12 +279,7 @@ fun SelectorCategoria(
     onCategoriaSelected: (String,String) -> Unit
 ) {
 
-    val categoriasFree = listOf(
-        CategoriaFree("1", "Comida"),
-        CategoriaFree("2", "Transporte"),
-        CategoriaFree("3", "Salud"),
-        CategoriaFree("4", "Entretenimiento")
-    )
+
 
     var expanded by remember { mutableStateOf(false) }
 

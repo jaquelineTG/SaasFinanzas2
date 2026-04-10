@@ -200,7 +200,7 @@ fun transaccionItem(
             }
 
             Text(
-                text = "$${"%.2f".format(if (tipo=="gasto") "-$monto" else monto)}",
+                text = "$${"%.2f".format(if (tipo == "gasto") -monto else monto)}",
                 style = MaterialTheme.typography.titleMedium,
                 color = Color(0xFF22C55E)
             )
