@@ -38,21 +38,26 @@ fun PrimaryButton(text: String,onClick: () -> Unit){
 }
 
 @Composable
-fun Alert(text: String, title:String, showDialog: Boolean){
-    AlertDialog(
-        onDismissRequest = { showDialog },
-        title = { title},
-        text = { text },
-        confirmButton = {
-            TextButton(onClick = {
-                showDialog
-            }) { Text("Confirmar") }
-        },
-        dismissButton = {
-            TextButton(onClick = { showDialog }) { Text("Cancelar") }
-        }
-    )
+fun Alert(
+    text: String,
+    title: String,
+    showDialog: Boolean,
+    onDismiss: () -> Unit
+) {
 
+    if (!showDialog) return
+
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        title = { Text(title) },
+        text = { Text(text) },
+        confirmButton = {
+            TextButton(onClick = { onDismiss() }) {
+                Text("Confirmar")
+            }
+        },
+
+    )
 }
 
 

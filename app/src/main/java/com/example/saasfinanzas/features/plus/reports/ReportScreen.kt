@@ -31,13 +31,13 @@ import com.example.saasfinanzas.features.transactions.categoriasFree
 @Composable
 fun ReportScreen(navHostController: NavHostController) {
 
-    var selectedTab by remember { mutableStateOf("Semanal") }
+    var selectedTab by remember { mutableStateOf("Mensual") }
     val viewModel: TransactionViewModel = hiltViewModel()
     val movimientos by viewModel.movimientos.collectAsState()
     val viewModelPresupuesto: BudgetViewModel=hiltViewModel()
     val presupuestosState=viewModelPresupuesto.presupuestos.collectAsState()
     val presupuestos=presupuestosState.value
-
+    var verTodos by remember { mutableStateOf(false) }
 
 
     LaunchedEffect(Unit) {
@@ -45,10 +45,29 @@ fun ReportScreen(navHostController: NavHostController) {
         viewModelPresupuesto.getBudgets()
     }
 
-    val gastos: List<Movimiento> =movimientos.filter { it.tipo=="gasto" }
+    val calendar = java.util.Calendar.getInstance()
+    val mesActual = calendar.get(java.util.Calendar.MONTH)
+    val anioActual = calendar.get(java.util.Calendar.YEAR)
+
+    val gastos = movimientos.filter { mov ->
+        val cal = java.util.Calendar.getInstance()
+        cal.timeInMillis = mov.fecha
+
+        val mesMov = cal.get(java.util.Calendar.MONTH)
+        val anioMov = cal.get(java.util.Calendar.YEAR)
+
+        mov.tipo == "gasto" &&
+                mesMov == mesActual &&
+                anioMov == anioActual
+    }
     var gastosTotal:Double=0.0
     gastos.forEach { movimiento ->
          gastosTotal= gastosTotal+movimiento.monto
+    }
+    val gastosMostrados = if (verTodos) {
+        gastos
+    } else {
+        gastos.take(3)
     }
 
     //  SIMULACIÓN (luego lo conectas con tu usuario real)
@@ -91,24 +110,46 @@ fun ReportScreen(navHostController: NavHostController) {
         ) {
 
             // TABS
+// TABS
             item {
                 Row(
                     modifier = Modifier
+                        .fillMaxWidth()
                         .clip(RoundedCornerShape(50))
                         .background(Color(0xFFDDE6DD))
-                        .padding(4.dp)
+                        .padding(4.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+
                     listOf("Semanal", "Mensual", "Anual").forEach { tab ->
+
                         val selected = tab == selectedTab
+                        val isLocked = !isPremium && (tab == "Semanal" || tab == "Anual")
+
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(50))
-                                .background(if (selected) Color.White else Color.Transparent)
-                                .clickable { selectedTab = tab }
+                                .background(
+                                    when {
+                                        selected -> Color.White
+                                        isLocked -> Color.LightGray
+                                        else -> Color.Transparent
+                                    }
+                                )
+                                .clickable(enabled = !isLocked) {
+                                    selectedTab = tab
+                                }
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
+
                         ) {
-                            Text(tab)
+                            Text(
+
+                                text = tab,
+                                color = if (isLocked) Color.Gray else Color.Black
+                            )
                         }
+
                         Spacer(modifier = Modifier.width(4.dp))
                     }
                 }
@@ -195,18 +236,21 @@ fun ReportScreen(navHostController: NavHostController) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("Historial", style = MaterialTheme.typography.titleMedium)
-                    Text("Ver todo", color = Color(0xFF1DB954))
+                    Text(
+                        if (verTodos) "Ver menos" else "Ver todo",
+                        color = Color(0xFF1DB954),
+                        modifier = Modifier.clickable {
+                            verTodos = !verTodos
+                        }
+                    )
                 }
             }
 
             // HISTORIAL LISTA
             items(
-                listOf(
-                    "Supermercado" to "-$142.30",
-                    "Luz eléctrica" to "-$89.00"
-                )
-            ) { (title, amount) ->
-                HistoryItem(title, amount)
+                gastosMostrados
+            ) { gasto ->
+                HistoryItem(gasto)
             }
 
             // 🔒 TARJETA PREMIUM (UPSSELL)
@@ -221,7 +265,7 @@ fun ReportScreen(navHostController: NavHostController) {
                             Text("Funciones Premium 🔒")
 
                             Text(
-                                "Desbloquea comparaciones, más categorías y análisis avanzados."
+                                "Desbloquea comparaciones, más categorías, resporte semanal y anual asi como análisis avanzados."
                             )
 
                             Spacer(modifier = Modifier.height(12.dp))
@@ -297,7 +341,7 @@ fun CategoryItem(categoria: Categoria, gastosCategoy: Double,presupuestos: List<
 }
 
 @Composable
-fun HistoryItem(title: String, amount: String) {
+fun HistoryItem(gasto: Movimiento) {
     Card(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
@@ -308,8 +352,8 @@ fun HistoryItem(title: String, amount: String) {
             modifier = Modifier.padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(title)
-            Text(amount, color = Color.Red)
+            Text(gasto.descripcion, modifier = Modifier.padding(end = 20.dp))
+            Text("${gasto.monto}", color = Color.Red)
         }
     }
 }

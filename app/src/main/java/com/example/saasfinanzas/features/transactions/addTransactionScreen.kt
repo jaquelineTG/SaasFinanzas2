@@ -56,6 +56,27 @@ fun AddTransaccionScreen(
     var showDialog by remember { mutableStateOf(false) }
 
     val viewModel: TransactionViewModel = hiltViewModel()
+    val movimientos by viewModel.movimientos.collectAsState()
+
+
+    val calendar = java.util.Calendar.getInstance()
+    val mesActual = calendar.get(java.util.Calendar.MONTH)
+    val anioActual = calendar.get(java.util.Calendar.YEAR)
+
+    val movimientosMes=movimientos.filter  { mov->
+        calendar.timeInMillis=mov.fecha
+        val mesMov = calendar.get(java.util.Calendar.MONTH)
+        val anioMov = calendar.get(java.util.Calendar.YEAR)
+
+        mesMov == mesActual && anioMov == anioActual
+
+
+    }
+
+
+
+
+
 
     LazyColumn(
         modifier = Modifier
@@ -260,12 +281,21 @@ fun AddTransaccionScreen(
                     descripcion = descripcion,
                     fecha = fecha
                 )
+                 if(movimientosMes.size>50){
 
-                viewModel.addMovimiento(movimiento)
+                 }else{
+                     viewModel.addMovimiento(movimiento)
+                     navController.popBackStack()
+                 }
 
-                navController.popBackStack()
+
             }
-            Alert("Agrega todos los datos del formulario","Datos Imcompletos",showDialog)
+            Alert(
+                text = "Agrega todos los datos del formulario",
+                title = "Datos incompletos",
+                showDialog = showDialog,
+                onDismiss = { showDialog = false }
+            )
         }
 
         item { Spacer(modifier = Modifier.height(30.dp)) }

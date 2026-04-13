@@ -50,11 +50,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.saasfinanzas.data.model.Categoria
 import com.example.saasfinanzas.data.model.Movimiento
 import com.example.saasfinanzas.data.model.Presupuesto
 import com.example.saasfinanzas.features.components.Alert
 import com.example.saasfinanzas.features.components.PrimaryButton
-import com.example.saasfinanzas.features.transactions.CategoriaFree
 import com.example.saasfinanzas.features.transactions.TransactionViewModel
 import com.example.saasfinanzas.ui.theme.SaasFinanzasTheme
 
@@ -72,10 +72,10 @@ fun AddBudget(navController: NavController) {
 
 
     val categoriasFree = listOf(
-        CategoriaFree("1", "Comida"),
-        CategoriaFree("2", "Transporte"),
-        CategoriaFree("3", "Salud"),
-        CategoriaFree("4", "Entretenimiento")
+        Categoria("1", "Comida"),
+        Categoria("2", "Transporte"),
+        Categoria("3", "Salud"),
+        Categoria("4", "Entretenimiento")
     )
     val viewModel: BudgetViewModel = hiltViewModel()
 
@@ -362,7 +362,12 @@ fun AddBudget(navController: NavController) {
             navController.popBackStack()
         }
 
-        Alert("Faltan datos o son inválidos","Datos Imcompletos",showDialog)
+        Alert(
+            text = "Agrega todos los datos del formulario",
+            title = "Datos incompletos",
+            showDialog = showDialog,
+            onDismiss = { showDialog = false }
+        )
     }
 }
 
