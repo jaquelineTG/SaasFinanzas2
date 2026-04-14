@@ -58,9 +58,12 @@ fun AddTransaccionScreen(
     var showDialogRestantes by remember { mutableStateOf(false) }
 
     val viewModel: TransactionViewModel = hiltViewModel()
+
+    LaunchedEffect(Unit) {
+        viewModel.cargarMovimientos()
+
+    }
     val movimientos by viewModel.movimientos.collectAsState()
-
-
     val calendar = java.util.Calendar.getInstance()
     val mesActual = calendar.get(java.util.Calendar.MONTH)
     val anioActual = calendar.get(java.util.Calendar.YEAR)
@@ -286,7 +289,7 @@ fun AddTransaccionScreen(
                 if(movimientosMes.size==45){
                     showDialogRestantes=true
                 }
-                 if(movimientosMes.size>=50){
+                 if(movimientosMes.size>=2){
                      showDialogLimite=true
                      navController.navigate("premium")
                      return@PrimaryButton
