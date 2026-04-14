@@ -53,7 +53,9 @@ fun AddTransaccionScreen(
     var categoriaNombre by remember { mutableStateOf("") }
     var fecha by remember { mutableStateOf(0L) }
     var isExpense by remember { mutableStateOf(true) }
+    var showDialogLimite by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
+    var showDialogRestantes by remember { mutableStateOf(false) }
 
     val viewModel: TransactionViewModel = hiltViewModel()
     val movimientos by viewModel.movimientos.collectAsState()
@@ -281,12 +283,18 @@ fun AddTransaccionScreen(
                     descripcion = descripcion,
                     fecha = fecha
                 )
-                 if(movimientosMes.size>50){
+                if(movimientosMes.size==45){
+                    showDialogRestantes=true
+                }
+                 if(movimientosMes.size>=50){
+                     showDialogLimite=true
+                     navController.navigate("premium")
+                     return@PrimaryButton
 
-                 }else{
+                 }
                      viewModel.addMovimiento(movimiento)
                      navController.popBackStack()
-                 }
+
 
 
             }
@@ -296,11 +304,32 @@ fun AddTransaccionScreen(
                 showDialog = showDialog,
                 onDismiss = { showDialog = false }
             )
+
+            Alert(
+                title = "Límite alcanzado 🔒",
+                text = "Ya usaste tus 50 movimientos del mes.\nDesbloquea movimientos ilimitados con Premium 💎",
+                showDialog = showDialogLimite,
+                onDismiss = { showDialogLimite = false }
+            )
+
+
+
+
+            Alert(
+                title = "Límite alcanzado 🔒",
+                text = "Te quedan 5 movimientos en el plan gratis",
+                showDialog = showDialogRestantes,
+                onDismiss = { showDialogRestantes = false }
+            )
+
+
         }
 
         item { Spacer(modifier = Modifier.height(30.dp)) }
     }
 }
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

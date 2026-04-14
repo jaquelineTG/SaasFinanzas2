@@ -35,6 +35,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +50,7 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.saasfinanzas.data.model.Meta
 import com.example.saasfinanzas.data.model.Presupuesto
+import com.example.saasfinanzas.features.components.Alert
 import com.example.saasfinanzas.features.components.PrimaryButton
 import com.example.saasfinanzas.features.transactions.TransactionViewModel
 import com.example.saasfinanzas.ui.theme.greenPrimary
@@ -65,8 +67,34 @@ fun AddGoal(navController: NavController) {
     var montoAhorrado by remember { mutableStateOf("") }
     var fechaLimite by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
-
+    var showDialogAlert by remember { mutableStateOf(false) }
     val viewModel: GoalViewModel = hiltViewModel()
+    val metasState=viewModel.metas.collectAsState()
+    val metas=metasState.value
+
+
+
+    val calendar = java.util.Calendar.getInstance()
+    val mesActual = calendar.get(java.util.Calendar.MONTH)
+    val anioActual = calendar.get(java.util.Calendar.YEAR)
+
+    val metasMesActual=metas.filter { meta ->
+        calendar.timeInMillis = meta.creadoEn
+
+        val mesMeta = calendar.get(java.util.Calendar.MONTH)
+        val anioMeta = calendar.get(java.util.Calendar.YEAR)
+
+        mesMeta==mesActual && anioMeta==anioActual
+
+
+
+    }
+
+    val metasMesActualCant:Int=metasMesActual.size
+
+
+
+
 
     LazyColumn(
         modifier = Modifier
@@ -195,6 +223,16 @@ fun AddGoal(navController: NavController) {
                     return@PrimaryButton
                 }
 
+                if(metasMesActualCant>=2){
+                    showDialogAlert=true
+                    navController.navigate("premium")
+                    return@PrimaryButton
+
+                }
+
+
+
+
                 val meta = Meta(
                     id = "",
                     nombre = nombre,
@@ -209,6 +247,12 @@ fun AddGoal(navController: NavController) {
 
                 navController.popBackStack()
             }
+            Alert(
+                title = "Límite alcanzado 🔒",
+                text = "Ya usaste tus 2 Metas del mes.\nDesbloquea Metas ilimitados con Premium 💎",
+                showDialog = showDialogAlert,
+                onDismiss = { showDialogAlert = false }
+            )
         }
 
         item { Spacer(modifier = Modifier.height(30.dp)) }

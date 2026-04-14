@@ -45,9 +45,9 @@ fun ReportScreen(navHostController: NavHostController) {
         viewModelPresupuesto.getBudgets()
     }
 
-    val calendar = java.util.Calendar.getInstance()
-    val mesActual = calendar.get(java.util.Calendar.MONTH)
-    val anioActual = calendar.get(java.util.Calendar.YEAR)
+        val calendar = java.util.Calendar.getInstance()
+        val mesActual = calendar.get(java.util.Calendar.MONTH)
+        val anioActual = calendar.get(java.util.Calendar.YEAR)
 
     val gastos = movimientos.filter { mov ->
         val cal = java.util.Calendar.getInstance()
