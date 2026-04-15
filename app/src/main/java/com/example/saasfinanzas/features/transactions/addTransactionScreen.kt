@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,15 +48,15 @@ fun AddTransaccionScreen(
     navController: NavController
 ) {
 
-    var monto by remember { mutableStateOf("") }
-    var descripcion by remember { mutableStateOf("") }
-    var categoriaId by remember { mutableStateOf("") }
-    var categoriaNombre by remember { mutableStateOf("") }
-    var fecha by remember { mutableStateOf(0L) }
-    var isExpense by remember { mutableStateOf(true) }
-    var showDialogLimite by remember { mutableStateOf(false) }
-    var showDialog by remember { mutableStateOf(false) }
-    var showDialogRestantes by remember { mutableStateOf(false) }
+    var monto by rememberSaveable { mutableStateOf("") }
+    var descripcion by rememberSaveable { mutableStateOf("") }
+    var categoriaId by rememberSaveable { mutableStateOf("") }
+    var categoriaNombre by rememberSaveable { mutableStateOf("") }
+    var fecha by rememberSaveable { mutableStateOf(0L) }
+    var isExpense by rememberSaveable { mutableStateOf(true) }
+    var showDialogLimite by rememberSaveable { mutableStateOf(false) }
+    var showDialog by rememberSaveable { mutableStateOf(false) }
+    var showDialogRestantes by rememberSaveable { mutableStateOf(false) }
 
     val viewModel: TransactionViewModel = hiltViewModel()
 
