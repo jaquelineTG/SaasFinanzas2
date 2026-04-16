@@ -1,5 +1,6 @@
 package com.example.saasfinanzas.features.transactions
 
+import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -11,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material3.*
@@ -41,6 +43,7 @@ val categoriasFree = listOf(
     Categoria("3", "Salud"),
     Categoria("4", "Entretenimiento")
 )
+@SuppressLint("SuspiciousIndentation")
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,6 +60,7 @@ fun AddTransaccionScreen(
     var showDialogLimite by rememberSaveable { mutableStateOf(false) }
     var showDialog by rememberSaveable { mutableStateOf(false) }
     var showDialogRestantes by rememberSaveable { mutableStateOf(false) }
+    var showDialogCategoria by rememberSaveable { mutableStateOf(false) }
 
     val viewModel: TransactionViewModel = hiltViewModel()
 
@@ -218,8 +222,20 @@ fun AddTransaccionScreen(
             ) {
 
                 Column(Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("CATEGORÍA", color = Color.Gray)
 
-                    Text("CATEGORÍA", color = Color.Gray)
+                        IconButton(onClick = {
+                            showDialogCategoria = true
+                        }) {
+                            Icon(Icons.Default.Add, contentDescription = "Agregar")
+                        }
+                    }
+
 
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -278,6 +294,16 @@ fun AddTransaccionScreen(
                     return@PrimaryButton
                 }
 
+
+                if(movimientosMes.size==45){
+                    showDialogRestantes=true
+                }
+                if (movimientosMes.size + 1 > 50) {
+                    showDialogLimite = true
+
+                    return@PrimaryButton
+                }
+
                 val movimiento = Movimiento(
                     id = "",
                     categoriaId = categoriaId,
@@ -287,15 +313,6 @@ fun AddTransaccionScreen(
                     descripcion = descripcion,
                     fecha = fecha
                 )
-                if(movimientosMes.size==45){
-                    showDialogRestantes=true
-                }
-                 if(movimientosMes.size>=2){
-                     showDialogLimite=true
-                     navController.navigate("premium")
-                     return@PrimaryButton
-
-                 }
                      viewModel.addMovimiento(movimiento)
                      navController.popBackStack()
 
@@ -313,7 +330,7 @@ fun AddTransaccionScreen(
                 title = "Límite alcanzado 🔒",
                 text = "Ya usaste tus 50 movimientos del mes.\nDesbloquea movimientos ilimitados con Premium 💎",
                 showDialog = showDialogLimite,
-                onDismiss = { showDialogLimite = false }
+                onDismiss = { showDialogLimite = false; navController.navigate("premium") }
             )
 
 
@@ -324,6 +341,22 @@ fun AddTransaccionScreen(
                 text = "Te quedan 5 movimientos en el plan gratis",
                 showDialog = showDialogRestantes,
                 onDismiss = { showDialogRestantes = false }
+            )
+            Alert(
+                title = "Crea tu Propias Categorias",
+                text = "Ya usaste tus 50 movimientos del mes.\nDesbloquea movimientos ilimitados con Premium 💎",
+                showDialog = showDialogCategoria,
+                onDismiss = { showDialogCategoria = false; navController.navigate("premium") }
+            )
+
+            Alert(
+                title = "Desbloquea categorías personalizadas",
+                text = "Crea tus propias categorías como \"Café\", \"Gym\" o \"Salidas\" y organiza tus finanzas a tu manera.\n\nDisponible solo en Premium.",
+                showDialog = showDialogCategoria,
+                onDismiss = {
+                    showDialogCategoria = false
+                    navController.navigate("premium")
+                }
             )
 
 

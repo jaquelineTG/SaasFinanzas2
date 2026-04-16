@@ -270,7 +270,7 @@ fun ReportScreen(navHostController: NavHostController) {
 
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            Button(onClick = { /* ir a pantalla de pago */ }) {
+                            Button(onClick = { navHostController.navigate("premium")}) {
                                 Text("Mejorar a Premium")
                             }
                         }
@@ -346,10 +346,12 @@ fun HistoryItem(gasto: Movimiento) {
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = 4.dp),
+
+
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(gasto.descripcion, modifier = Modifier.padding(end = 20.dp))

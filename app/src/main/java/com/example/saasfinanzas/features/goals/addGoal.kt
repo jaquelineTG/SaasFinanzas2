@@ -223,9 +223,9 @@ fun AddGoal(navController: NavController) {
                     return@PrimaryButton
                 }
 
-                if(metasMesActualCant>=2){
+                if(metasMesActualCant+1>2){
                     showDialogAlert=true
-                    navController.navigate("premium")
+
                     return@PrimaryButton
 
                 }
@@ -251,7 +251,7 @@ fun AddGoal(navController: NavController) {
                 title = "Límite alcanzado 🔒",
                 text = "Ya usaste tus 2 Metas del mes.\nDesbloquea Metas ilimitados con Premium 💎",
                 showDialog = showDialogAlert,
-                onDismiss = { showDialogAlert = false }
+                onDismiss = { showDialogAlert = false; navController.navigate("premium") }
             )
         }
 
