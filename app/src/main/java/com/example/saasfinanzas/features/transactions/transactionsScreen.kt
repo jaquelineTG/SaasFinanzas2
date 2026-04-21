@@ -11,7 +11,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -117,11 +119,13 @@ fun TransactionsScreen(navHostController: NavController) {
 
             items(listaFiltrada) { transaccion ->
 
-                transaccionItem(
+                TransaccionItem(
                     categoriaNombre = transaccion.categoriaNombre,
                     monto = transaccion.monto,
                     descripcion = transaccion.descripcion,
-                    tipo=transaccion.tipo
+                    tipo=transaccion.tipo,
+                    onDelete = { /* borrar en viewModel */ },
+                    onEdit = { /* navegar a editar */ }
                 )
             }
         }
@@ -139,71 +143,129 @@ fun getIconByCategory(categoria: String): ImageVector {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun transaccionItem(
+fun TransaccionItem(
     categoriaNombre: String,
     monto: Double,
     descripcion: String,
-    tipo:String
+    tipo: String,
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
 ) {
 
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            when (value) {
+                SwipeToDismissBoxValue.EndToStart -> {
+                    onDelete()
+                    true
+                }
+                SwipeToDismissBoxValue.StartToEnd -> {
+                    onEdit()
+                    false // no lo desaparece
+                }
+                else -> false
+            }
+        }
+    )
 
-    ElevatedCard(
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = Color(0xFFFDFDFD)
-        ),
-        elevation = CardDefaults.elevatedCardElevation(4.dp),
-        shape = MaterialTheme.shapes.large,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = {
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+            val color = when (dismissState.dismissDirection) {
+                SwipeToDismissBoxValue.EndToStart -> Color.Red
+                SwipeToDismissBoxValue.StartToEnd -> Color.Blue
+                else -> Color.Transparent
+            }
+
+            val icon = when (dismissState.dismissDirection) {
+                SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
+                SwipeToDismissBoxValue.StartToEnd -> Icons.Default.Edit
+                else -> null
+            }
 
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .background(Color(0xFFE8F5E9), CircleShape),
-                contentAlignment = Alignment.Center
+                    .fillMaxSize()
+                    .background(color)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = when (dismissState.dismissDirection) {
+                    SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                    SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                    else -> Alignment.Center
+                }
             ) {
-                Icon(
-                    imageVector = getIconByCategory(categoriaNombre),
-                    contentDescription = null,
-                    tint = Color(0xFF22C55E)
-                )
+                icon?.let {
+                    Icon(
+                        imageVector = it,
+                        contentDescription = null,
+                        tint = Color.White
+                    )
+                }
             }
+        }
+    ) {
 
-            Spacer(modifier = Modifier.width(12.dp))
+        //  CARD ORIGINAL
+        ElevatedCard(
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = Color(0xFFFDFDFD)
+            ),
+            elevation = CardDefaults.elevatedCardElevation(4.dp),
+            shape = MaterialTheme.shapes.large,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
 
-            Column(
-                modifier = Modifier.weight(1f)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(Color(0xFFE8F5E9), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = getIconByCategory(categoriaNombre),
+                        contentDescription = null,
+                        tint = Color(0xFF22C55E)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+
+                    Text(
+                        text = descripcion,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = categoriaNombre,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
 
                 Text(
-                    text = descripcion,
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = categoriaNombre,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    text = "$${"%.2f".format(if (tipo == "gasto") -monto else monto)}",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (tipo == "gasto") Color.Red else Color(0xFF22C55E)
                 )
             }
-
-            Text(
-                text = "$${"%.2f".format(if (tipo == "gasto") -monto else monto)}",
-                style = MaterialTheme.typography.titleMedium,
-                color = if (tipo == "gasto") Color.Red else Color(0xFF22C55E)
-            )
         }
     }
 }
