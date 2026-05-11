@@ -31,11 +31,11 @@ import com.example.saasfinanzas.features.auth.AuthViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConfigurationScreen(navHostController: NavHostController) {
-
-    var transactionAlerts by remember { mutableStateOf(true) }
-    var budgetAlerts by remember { mutableStateOf(false) }
-    val viewModel: AuthViewModel = hiltViewModel()
     val viewModelConf:ConfigurationViewModel=hiltViewModel()
+    // 1. Escuchamos el estado que viene del ViewModel en lugar del 'remember'
+    val transactionAlerts by viewModelConf.transactionAlerts.collectAsState()
+    val budgetAlerts by viewModelConf.budgetAlerts.collectAsState()
+    val viewModel: AuthViewModel = hiltViewModel()
     val currentUser by viewModelConf.currentUser.collectAsState()
     LaunchedEffect(Unit) {
         viewModelConf.userData()
@@ -135,13 +135,19 @@ fun ConfigurationScreen(navHostController: NavHostController) {
                     SwitchItem(
                         text = "Recordatorio de Metas",
                         checked = transactionAlerts,
-                        onCheckedChange = { transactionAlerts = it }
+                        // 2. Al cambiar el switch, mandamos a llamar a la función del ViewModel
+                        onCheckedChange = { newValue ->
+                            viewModelConf.saveAlertsConfig(transaction = newValue, budget = budgetAlerts)
+                        }
                     )
 
                     SwitchItem(
                         text = "Alerta Limite de Presupuesto",
                         checked = budgetAlerts,
-                        onCheckedChange = { budgetAlerts = it }
+                        // Mandamos el estado actual de transaction, pero el nuevo valor de budget
+                        onCheckedChange = { newValue ->
+                            viewModelConf.saveAlertsConfig(transaction = transactionAlerts, budget = newValue)
+                        }
                     )
                 }
             }

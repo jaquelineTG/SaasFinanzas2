@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.saasfinanzas.data.model.Usuario
 import com.example.saasfinanzas.data.repository.AuthRepository
+import com.example.saasfinanzas.data.repository.ConfiguracionRepository
 import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +16,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ConfigurationViewModel @Inject constructor(
-    private val repository: AuthRepository
+    private val repository: AuthRepository,
+    private val respositoryConf: ConfiguracionRepository
 ) : ViewModel() {
                 //dato string
 //    private val _currentUser = MutableStateFlow("")
@@ -27,15 +30,28 @@ class ConfigurationViewModel @Inject constructor(
     private val _menssage = MutableStateFlow<String?>(null)
     val menssage : StateFlow<String?> = _menssage
 
+    private val _transactionAlerts = MutableStateFlow(false) // Puedes poner tu valor por defecto
+    val transactionAlerts : StateFlow<Boolean> = _transactionAlerts
+
+    private val _budgetAlerts = MutableStateFlow(false)
+    val budgetAlerts : StateFlow<Boolean> = _budgetAlerts
+
     fun userData(){
         viewModelScope.launch {
             val result = repository.getUserData()
 
-            result.onSuccess {
-                _currentUser.value= it
+            result.onSuccess { usuario ->
+                // Guardamos el usuario
+                _currentUser.value = usuario
+
+                // Si el usuario se descargó correctamente,
+                // actualizamos los estados de las alertas con los datos de Firebase
+                if (usuario != null) {
+                    _transactionAlerts.value = usuario.transactionAlerts
+                    _budgetAlerts.value = usuario.budgetAlerts
+                }
             }
         }
-
     }
     fun CambiarContraseña( currentPassword: String, newPassword: String,confirmPassword:String){
         viewModelScope.launch {
@@ -56,5 +72,25 @@ class ConfigurationViewModel @Inject constructor(
             }
         }
     }
-}
+
+
+
+    fun saveAlertsConfig(transaction: Boolean, budget: Boolean) {
+        val uid = repository.getCurrentUserUid() ?: return
+
+        // Actualizamos la UI al instante para que se sienta rápida
+        _transactionAlerts.value = transaction
+        _budgetAlerts.value = budget
+
+        viewModelScope.launch {
+            val result = respositoryConf.saveAlertStatus(uid, transaction, budget)
+
+            result.onFailure {
+                // Si falla en Firebase, podrías revertir los switches o mostrar un error
+                _menssage.value = "Error al guardar preferencias"
+            }
+        }
+    }
+    }
+
 

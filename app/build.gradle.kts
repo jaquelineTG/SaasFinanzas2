@@ -60,6 +60,10 @@ dependencies {
     // Firebase (BOM primero)
     implementation(platform(libs.firebase.bom))
 
+    // Dependencia para notificaciones push
+    implementation(libs.firebase.messaging)
+
+
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
     implementation(libs.firebase.auth)

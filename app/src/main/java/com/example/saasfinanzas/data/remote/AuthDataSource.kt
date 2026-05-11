@@ -30,35 +30,88 @@ class AuthDataSource @Inject constructor() {
 //    }
 private val firestore = FirebaseFirestore.getInstance()
 
-    suspend fun register(
-        email: String,
-        password: String,
-        name: String
-    ): Result<String> {
-        return try {
-            val result = auth
-                .createUserWithEmailAndPassword(email, password)
-                .await()
+//    suspend fun register(
+//        email: String,
+//        password: String,
+//        name: String
+//    ): Result<String> {
+//        return try {
+//            val result = auth
+//                .createUserWithEmailAndPassword(email, password)
+//                .await()
+//
+//            val uid = result.user?.uid ?: throw Exception("No UID")
+//
+//            val userData = hashMapOf(
+//                "email" to email,
+//                "nombre" to name,
+//                "fechaRegistro" to FieldValue.serverTimestamp()
+//            )
+//
+//            firestore.collection("usuarios")
+//                .document(uid)
+//                .set(userData)
+//                .await()
+//
+//            Result.success(uid)
+//
+//        } catch (e: Exception) {
+//            Result.failure(e)
+//        }
+//    }
+suspend fun register(
+    email: String,
+    password: String,
+    name: String
+): Result<String> {
+    return try {
+        val result = auth
+            .createUserWithEmailAndPassword(email, password)
+            .await()
 
-            val uid = result.user?.uid ?: throw Exception("No UID")
+        val uid = result.user?.uid ?: throw Exception("No UID")
 
-            val userData = hashMapOf(
-                "email" to email,
-                "nombre" to name,
-                "fechaRegistro" to FieldValue.serverTimestamp()
-            )
+        val userData = hashMapOf(
+            "email" to email,
+            "nombre" to name,
+            "fechaRegistro" to FieldValue.serverTimestamp(),
+            // 👇 AGREGA ESTO PARA LOS NUEVOS USUARIOS 👇
+            "transactionAlerts" to false,
+            "budgetAlerts" to false
+        )
 
-            firestore.collection("usuarios")
-                .document(uid)
-                .set(userData)
-                .await()
+        firestore.collection("usuarios")
+            .document(uid)
+            .set(userData)
+            .await()
 
-            Result.success(uid)
+        Result.success(uid)
 
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    } catch (e: Exception) {
+        Result.failure(e)
     }
+}
+
+
+//    suspend fun getUserData(): Result<Usuario> {
+//        return try {
+//            val uid = auth.currentUser?.uid ?: throw Exception("No user")
+//
+//            val document = firestore.collection("usuarios")
+//                .document(uid)
+//                .get()
+//                .await()
+//
+//            val usuario = Usuario(
+//                nombre = document.getString("nombre") ?: "",
+//                correo = document.getString("email") ?: ""
+//            )
+//            Result.success(usuario)
+//
+//        } catch (e: Exception) {
+//            Result.failure(e)
+//        }
+//    }
 
     suspend fun getUserData(): Result<Usuario> {
         return try {
@@ -71,7 +124,10 @@ private val firestore = FirebaseFirestore.getInstance()
 
             val usuario = Usuario(
                 nombre = document.getString("nombre") ?: "",
-                correo = document.getString("email") ?: ""
+                correo = document.getString("email") ?: "",
+                // 👇 ESTAS SON LAS LÍNEAS QUE FALTABAN 👇
+                transactionAlerts = document.getBoolean("transactionAlerts") ?: false,
+                budgetAlerts = document.getBoolean("budgetAlerts") ?: false
             )
             Result.success(usuario)
 

@@ -1,5 +1,6 @@
 package com.example.saasfinanzas.features.home
 
+import RequestNotificationPermission
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -53,6 +54,9 @@ import com.example.saasfinanzas.features.transactions.TransactionViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Home(navHostController: NavHostController) {
+
+    RequestNotificationPermission()
+    
     val viewModel: HomeViewModel = hiltViewModel()
     val viewModelMeta: GoalViewModel = hiltViewModel()
     val viewModelTran: TransactionViewModel = hiltViewModel()
