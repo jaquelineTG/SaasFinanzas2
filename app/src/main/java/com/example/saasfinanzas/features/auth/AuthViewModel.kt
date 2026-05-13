@@ -5,10 +5,14 @@ package com.example.saasfinanzas.features.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.saasfinanzas.data.repository.AuthRepository
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
@@ -55,5 +59,34 @@ class AuthViewModel @Inject constructor (
     fun logout(){
         repository.logout();
     }
+
+    fun checkAndSaveFcmToken() {
+        viewModelScope.launch {
+            try {
+                // Le pedimos el token a Firebase
+                val token = FirebaseMessaging.getInstance().token.await()
+                println("FCM: Mi token es $token")
+
+                // Lo guardamos en Firestore
+                repository.updateFcmToken(token)
+            } catch (e: Exception) {
+                println("FCM Error: No se pudo obtener o guardar el token - ${e.message}")
+            }
+        }
+    }
+    fun loginWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+
+            val result = repository.loginWithGoogle(idToken)
+
+            _authState.value = result.fold(
+                onSuccess = { AuthState.Success(it) },
+                onFailure = { AuthState.Error(it.message ?: "Error al iniciar sesión con Google") }
+            )
+        }
+    }
+
+
 
 }

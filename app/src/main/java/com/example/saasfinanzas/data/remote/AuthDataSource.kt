@@ -4,6 +4,7 @@ package com.example.saasfinanzas.data.remote
 import com.example.saasfinanzas.data.model.Usuario
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FieldValue
 import kotlinx.coroutines.tasks.await
 import com.google.firebase.firestore.FirebaseFirestore
@@ -176,6 +177,52 @@ suspend fun register(
 
             Result.success("se cambio la contraseña con exito")
 
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateFcmToken(token: String): Result<Unit> {
+        return try {
+            val uid = auth.currentUser?.uid ?: throw Exception("No user")
+
+            firestore.collection("usuarios")
+                .document(uid)
+                .update("fcmToken", token)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun loginWithGoogle(idToken: String): Result<String> {
+        return try {
+            // 1. Creamos la credencial con el token de Google
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+
+            // 2. Iniciamos sesión en Firebase
+            val result = auth.signInWithCredential(credential).await()
+            val user = result.user ?: throw Exception("No se pudo obtener el usuario")
+
+            // 3. Verificamos si es un usuario nuevo para crear su documento en Firestore
+            if (result.additionalUserInfo?.isNewUser == true) {
+                val userData = hashMapOf(
+                    "email" to (user.email ?: ""),
+                    "nombre" to (user.displayName ?: "Usuario Google"),
+                    "fechaRegistro" to FieldValue.serverTimestamp(),
+                    "transactionAlerts" to false,
+                    "budgetAlerts" to false
+                )
+
+                firestore.collection("usuarios")
+                    .document(user.uid)
+                    .set(userData)
+                    .await()
+            }
+
+            Result.success(user.uid)
         } catch (e: Exception) {
             Result.failure(e)
         }

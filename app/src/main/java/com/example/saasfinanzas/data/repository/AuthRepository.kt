@@ -28,8 +28,12 @@ class AuthRepository @Inject constructor(
     suspend fun changePassword(currentPassword:String, newPassword: String): Result<String> {
         return dataSource.changePassword(currentPassword, newPassword)
     }
-
-
+    suspend fun updateFcmToken(token: String): Result<Unit> {
+        return dataSource.updateFcmToken(token)
+    }
+    suspend fun loginWithGoogle(idToken: String): Result<String> {
+        return dataSource.loginWithGoogle(idToken)
+    }
 
 
 }

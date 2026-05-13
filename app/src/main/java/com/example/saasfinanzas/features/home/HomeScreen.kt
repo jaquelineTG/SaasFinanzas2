@@ -30,6 +30,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.saasfinanzas.data.model.Meta
 import com.example.saasfinanzas.data.model.Movimiento
+import com.example.saasfinanzas.features.auth.AuthViewModel
 import com.example.saasfinanzas.features.goals.GoalViewModel
 
 import com.example.saasfinanzas.features.transactions.TransactionViewModel
@@ -56,8 +57,9 @@ import com.example.saasfinanzas.features.transactions.TransactionViewModel
 fun Home(navHostController: NavHostController) {
 
     RequestNotificationPermission()
-    
+
     val viewModel: HomeViewModel = hiltViewModel()
+    val viewModelAuth: AuthViewModel = hiltViewModel()
     val viewModelMeta: GoalViewModel = hiltViewModel()
     val viewModelTran: TransactionViewModel = hiltViewModel()
     val currentUser by viewModel.currentUser.collectAsState()
@@ -69,6 +71,7 @@ fun Home(navHostController: NavHostController) {
         viewModel.userData()
         viewModelTran.cargarMovimientos()
         viewModelMeta.cargarMetas()
+        viewModelAuth.checkAndSaveFcmToken()
     }
     var ingresos: Float=0.0f;
     var gastos: Float=0.0f;
@@ -94,14 +97,22 @@ fun Home(navHostController: NavHostController) {
 
 
 
-    ) { padding ->
+    ) { paddingValues ->
 
         LazyColumn(
             modifier = Modifier
-                .padding(padding)
                 .fillMaxSize()
                 .background(Color(0xFFF5F5F5)),
-            contentPadding = PaddingValues(16.dp),
+
+
+            // Combinamos el padding del Scaffold (que reserva el espacio para el BottomNav)
+            // con tus 16.dp de margen interno.
+            contentPadding = PaddingValues(
+                top = paddingValues.calculateTopPadding() + 16.dp,
+                bottom = paddingValues.calculateBottomPadding() + 16.dp,
+                start = 16.dp,
+                end = 16.dp
+            ),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 

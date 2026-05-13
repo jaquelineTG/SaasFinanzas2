@@ -14,22 +14,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-
+data class BottomNavItem(
+    val route: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val label: String
+)
+val items = listOf(
+    BottomNavItem("home", Icons.Outlined.Home, "Inicio"),
+    BottomNavItem("movimientos", Icons.Outlined.ReceiptLong, "Movimientos"),
+    BottomNavItem("metas", Icons.Outlined.EmojiEvents, "Metas"),
+    BottomNavItem("presupuestos", Icons.Outlined.AccountBalanceWallet, "Presupuestos"),
+    BottomNavItem("mas", Icons.Outlined.MoreHoriz, "Más")
+)
 @Composable
 fun BottomNavigationBar(navController: NavController) {
 
-    data class BottomNavItem(
-        val route: String,
-        val icon: androidx.compose.ui.graphics.vector.ImageVector,
-        val label: String
-    )
-    val items = listOf(
-        BottomNavItem("home", Icons.Outlined.Home, "Inicio"),
-        BottomNavItem("movimientos", Icons.Outlined.ReceiptLong, "Movimientos"),
-        BottomNavItem("metas", Icons.Outlined.EmojiEvents, "Metas"),
-        BottomNavItem("presupuestos", Icons.Outlined.AccountBalanceWallet, "Presupuestos"),
-        BottomNavItem("mas", Icons.Outlined.MoreHoriz, "Más")
-    )
+
 
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 

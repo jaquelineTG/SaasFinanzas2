@@ -12,7 +12,20 @@
           "package_name": "com.example.saasfinanzas"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "946399823970-o9btjk7dhd2u20sd6jaavis946hl9tct.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.saasfinanzas",
+            "certificate_hash": "e87100f6e5b32f76f9c1590f93b82aacd63f3a0e"
+          }
+        },
+        {
+          "client_id": "946399823970-fkvtrrh48r7cd1e010lvhu0586acou4h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD0kpDxLo5UWjvrEvPiEp9BOX2tu6l8UHM"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "946399823970-fkvtrrh48r7cd1e010lvhu0586acou4h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

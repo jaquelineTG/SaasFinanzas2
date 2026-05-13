@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.saasfinanzas.ui.theme.greenPrimary
 import com.example.saasfinanzas.ui.theme.white
@@ -20,12 +21,13 @@ import com.example.saasfinanzas.ui.theme.white
 
 @Composable
 fun PrimaryButton(text: String,onClick: () -> Unit){
+
    Button(
        onClick = onClick,
        shape = RoundedCornerShape(5.dp),
        colors = ButtonDefaults.buttonColors(
-           containerColor = greenPrimary,
-           contentColor = white
+           containerColor = Color(0xFF2E7D32),
+           contentColor = Color.White
        ),
        modifier = Modifier
            .fillMaxWidth()

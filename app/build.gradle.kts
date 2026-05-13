@@ -64,6 +64,18 @@ dependencies {
     implementation(libs.firebase.messaging)
 
 
+    // Credential Manager (El nuevo método oficial para Google Sign-In)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+
+
+
+
+
+
+
+
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
     implementation(libs.firebase.auth)

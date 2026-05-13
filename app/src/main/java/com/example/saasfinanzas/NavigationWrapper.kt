@@ -8,11 +8,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.saasfinanzas.features.auth.AuthViewModel
 import com.example.saasfinanzas.features.auth.LoginScreen
 import com.example.saasfinanzas.features.auth.RegisterScreen
@@ -32,6 +34,7 @@ import com.example.saasfinanzas.features.plus.reports.ReportScreen
 import com.example.saasfinanzas.features.transactions.AddTransaccionScreen
 import com.example.saasfinanzas.features.transactions.TransactionsScreen
 import com.example.saasfinanzas.features.welcome.Welcome
+import com.google.firebase.auth.FirebaseAuth
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -39,123 +42,79 @@ fun NavigationWrapper(navHostController: NavHostController) {
     val viewModel: AuthViewModel = hiltViewModel()
     val user by viewModel.currentUser.collectAsState()
 
+    val navBackStackEntry by navHostController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    // CORRECCIÓN 1: Calculamos el destino inicial una sola vez y lo guardamos en memoria.
+    // Usamos FirebaseAuth directamente de forma síncrona para que sea instantáneo.
+    val startDest = remember {
+        if (FirebaseAuth.getInstance().currentUser != null) "home" else "welcome"
+    }
+
     LaunchedEffect(Unit) {
         viewModel.getCurrentUserUid()
     }
 
     LaunchedEffect(user) {
-        if (user == null) {
+        if (user == null && currentRoute != "login" && currentRoute != "register") {
             navHostController.navigate("welcome") {
-                popUpTo(0)
-            }
-        } else {
-            navHostController.navigate("home") {
-                popUpTo(0)
+                popUpTo(navHostController.graph.id) { inclusive = true }
             }
         }
     }
+
+    val screensWithBottomNav = listOf(
+        "home",
+        "movimientos",
+        "metas",
+        "presupuestos",
+        "mas"
+    )
+
     Scaffold(
         bottomBar = {
-                if (user!=null){
+            // CORRECCIÓN 2: Le quitamos el "user != null".
+            // Si la ruta está en la lista permitida, mostramos la barra sin importar nada más.
+            if (currentRoute in screensWithBottomNav) {
                 BottomNavigationBar(navHostController)
-                }
-
+            }
         }
     ) { innerPadding ->
 
         NavHost(
             navController = navHostController,
-            startDestination = "welcome",
+            startDestination = startDest, // Usamos la variable estática que calculamos arriba
             modifier = Modifier.padding(innerPadding)
-        )
-        {
+        ) {
 
+            composable("welcome") { Welcome(navHostController) }
+            composable("login") { LoginScreen(navHostController) }
+            composable("register") { RegisterScreen(navHostController) }
+            composable("home") { Home(navHostController) }
+            composable("movimientos") { TransactionsScreen(navHostController) }
+            composable("metas") { GoalScreen(navHostController) }
+            composable("añadir_metas") { AddGoal(navHostController) }
 
-            composable("welcome") {
-                Welcome(navHostController)
+            composable(route = "detail_goal/{metaId}/{porcentaje}/{progress}") { backStackEntry ->
+                val metaId = backStackEntry.arguments?.getString("metaId")
+                val porcentaje = backStackEntry.arguments?.getString("porcentaje")
+                val progress = backStackEntry.arguments?.getString("progress")
+                DetailGoal(navHostController, metaId, porcentaje, progress)
             }
 
-            composable("login") {
-                LoginScreen(navHostController)
-            }
-            composable("register") {
-                RegisterScreen(navHostController)
-            }
-            composable("home") {
-                Home(navHostController)
+            composable("añadir_aporte/{metaId}") { backStackEntry ->
+                val metaId = backStackEntry.arguments?.getString("metaId")
+                AddAporte(navHostController, metaId)
             }
 
-            composable("movimientos") {
-                TransactionsScreen(navHostController)
-            }
-
-            composable("metas") {
-                GoalScreen(navHostController)
-            }
-            composable("añadir_metas") {
-                AddGoal(navHostController)
-            }
-            composable(
-                //Por defecto Navigation guarda los argumentos como String.
-                route = "detail_goal/{metaId}/{porcentaje}/{progress}"
-            ) { backStackEntry ->
-
-                val metaId = backStackEntry.arguments
-                    ?.getString("metaId")
-                val porcentaje = backStackEntry.arguments
-                    ?.getString("porcentaje")
-                val progress = backStackEntry.arguments
-                    ?.getString("progress")
-
-
-                DetailGoal(navHostController,metaId,porcentaje,progress)
-            }
-
-            composable(
-                "añadir_aporte/{metaId}"
-            ) {backStackEntry ->
-
-                val metaId = backStackEntry.arguments
-                    ?.getString("metaId")
-
-                AddAporte(navHostController,metaId)
-            }
-
-            composable("presupuestos") {
-                BudgetScreen(navHostController)
-            }
-            composable("añadir_presupuestos") {
-                AddBudget(navHostController)
-            }
-
-//            composable("añadir_categoria") {
-//                AñadirCategoria(navHostController)
-//            }
-
-            composable("añadir_movimiento") {
-                AddTransaccionScreen(navHostController)
-            }
-
-            composable("mas") {
-                PlusScreen(navHostController)
-            }
-
-
-            composable("configuracion") {
-                ConfigurationScreen(navHostController)
-            }
-            composable("cambiarContraseña") {
-                ChangePasswordScreen(navHostController)
-            }
-
-            composable("reportes") {
-                ReportScreen(navHostController)
-            }
-
-            composable("premium") {
-                PremiumScreen(navHostController)
-            }
+            composable("presupuestos") { BudgetScreen(navHostController) }
+            composable("añadir_presupuestos") { AddBudget(navHostController) }
+            composable("añadir_movimiento") { AddTransaccionScreen(navHostController) }
+            composable("mas") { PlusScreen(navHostController) }
+            composable("configuracion") { ConfigurationScreen(navHostController) }
+            composable("cambiarContraseña") { ChangePasswordScreen(navHostController) }
+            composable("reportes") { ReportScreen(navHostController) }
+            composable("premium") { PremiumScreen(navHostController) }
         }
-
     }
-    }
+}
