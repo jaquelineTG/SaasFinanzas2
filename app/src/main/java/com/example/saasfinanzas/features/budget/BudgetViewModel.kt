@@ -21,7 +21,8 @@ class BudgetViewModel@Inject constructor(
     val presupuestos: StateFlow<List<Presupuesto>> = _presupuestos
 
 
-    fun addBudget(presupuesto: Presupuesto){
+    // Agregamos el parámetro onSuccess
+    fun addBudget(presupuesto: Presupuesto, onSuccess: () -> Unit){
         val uid = authRepository.getCurrentUserUid() ?: return
 
         viewModelScope.launch {
@@ -29,6 +30,7 @@ class BudgetViewModel@Inject constructor(
 
             result.onSuccess {
                 println("Guardado correctamente")
+                onSuccess() // <-- Le avisamos a la pantalla que ya puede cerrarse
             }.onFailure {
                 println("Error: ${it.message}")
             }

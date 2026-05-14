@@ -166,7 +166,8 @@ fun LoginScreen(navController: NavController) {
             // NUEVO BOTÓN DE GOOGLE PARA LOGIN
             OutlinedButton(
                 onClick = {
-                    coroutineScope.launch {
+                    coroutineScope.
+                    launch {
                         val token = doGoogleSignIn(context)
                         if (token != null) {
                             viewModel.loginWithGoogle(token)

@@ -4,20 +4,19 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.saasfinanzas.data.model.Meta
-import com.example.saasfinanzas.data.model.Movimiento
 import com.example.saasfinanzas.data.repository.AuthRepository
 import com.example.saasfinanzas.data.repository.MetaRepository
-import com.example.saasfinanzas.data.repository.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
 @HiltViewModel
-    class GoalViewModel @Inject constructor(
-        private val repository: MetaRepository,
-        private val authRepository: AuthRepository
-    ) : ViewModel() {
+class GoalViewModel @Inject constructor(
+    private val repository: MetaRepository,
+    private val authRepository: AuthRepository
+) : ViewModel() {
 
     private val _metas = MutableStateFlow<List<Meta>>(emptyList())
     val metas: StateFlow<List<Meta>> = _metas
@@ -32,25 +31,20 @@ import javax.inject.Inject
         }
     }
 
-
-
-
-    fun addMeta( meta: Meta,imageUri: Uri?) {
-
+    // 1. Agregamos el parámetro onSuccess
+    fun addMeta(meta: Meta, imageUri: Uri?, onSuccess: () -> Unit) {
         val uid = authRepository.getCurrentUserUid() ?: return
 
         viewModelScope.launch {
-            val result = repository.addMeta(uid,meta,imageUri)
+            val result = repository.addMeta(uid, meta, imageUri)
 
             result.onSuccess {
-                println("Guardado correctamente")
+                println("Meta e imagen guardadas correctamente")
+                // 2. Avisamos a la UI que ya terminó de subir todo
+                onSuccess()
             }.onFailure {
-                println("Error: ${it.message}")
+                println("Error al guardar la meta: ${it.message}")
             }
         }
     }
-
-
-
-
 }

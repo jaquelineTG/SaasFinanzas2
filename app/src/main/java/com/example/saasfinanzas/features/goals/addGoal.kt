@@ -1,45 +1,19 @@
 package com.example.saasfinanzas.features.goals
 
-import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,14 +23,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.saasfinanzas.data.model.Meta
-import com.example.saasfinanzas.data.model.Presupuesto
 import com.example.saasfinanzas.features.components.Alert
 import com.example.saasfinanzas.features.components.PrimaryButton
-import com.example.saasfinanzas.features.transactions.TransactionViewModel
-import com.example.saasfinanzas.ui.theme.greenPrimary
-import com.example.saasfinanzas.ui.theme.white
-import kotlin.String
-
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,34 +36,22 @@ fun AddGoal(navController: NavController) {
     var montoAhorrado by remember { mutableStateOf("") }
     var fechaLimite by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+    var showDialogIncompleto by remember { mutableStateOf(false) }
     var showDialogAlert by remember { mutableStateOf(false) }
+
     val viewModel: GoalViewModel = hiltViewModel()
-    val metasState=viewModel.metas.collectAsState()
-    val metas=metasState.value
+    val metasState = viewModel.metas.collectAsState()
+    val metas = metasState.value
 
+    val calendar = Calendar.getInstance()
+    val mesActual = calendar.get(Calendar.MONTH)
+    val anioActual = calendar.get(Calendar.YEAR)
 
-
-    val calendar = java.util.Calendar.getInstance()
-    val mesActual = calendar.get(java.util.Calendar.MONTH)
-    val anioActual = calendar.get(java.util.Calendar.YEAR)
-
-    val metasMesActual=metas.filter { meta ->
-        calendar.timeInMillis = meta.creadoEn
-
-        val mesMeta = calendar.get(java.util.Calendar.MONTH)
-        val anioMeta = calendar.get(java.util.Calendar.YEAR)
-
-        mesMeta==mesActual && anioMeta==anioActual
-
-
-
-    }
-
-    val metasMesActualCant:Int=metasMesActual.size
-
-
-
-
+    val metasMesActualCant = metas.filter { meta ->
+        val cal = Calendar.getInstance().apply { timeInMillis = meta.creadoEn }
+        cal.get(Calendar.MONTH) == mesActual && cal.get(Calendar.YEAR) == anioActual
+    }.size
 
     LazyColumn(
         modifier = Modifier
@@ -112,18 +69,13 @@ fun AddGoal(navController: NavController) {
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-
                 IconButton(
                     onClick = { navController.popBackStack() },
                     modifier = Modifier.align(Alignment.CenterStart)
                 ) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "")
                 }
-
-                Text(
-                    "Agregar Meta",
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Text("Agregar Meta", style = MaterialTheme.typography.titleMedium)
             }
         }
 
@@ -131,9 +83,7 @@ fun AddGoal(navController: NavController) {
 
         /* 🔹 NOMBRE */
         item {
-            CardField(
-                title = "NOMBRE"
-            ) {
+            CardField(title = "NOMBRE") {
                 OutlinedTextField(
                     value = nombre,
                     onValueChange = { nombre = it },
@@ -143,7 +93,6 @@ fun AddGoal(navController: NavController) {
                 )
             }
         }
-
         item { Spacer(modifier = Modifier.height(20.dp)) }
 
         /* 🔹 MONTO OBJETIVO */
@@ -151,11 +100,7 @@ fun AddGoal(navController: NavController) {
             CardField(title = "MONTO OBJETIVO") {
                 OutlinedTextField(
                     value = montoObjetivo,
-                    onValueChange = {
-                        if (it.matches(Regex("^\\d*\\.?\\d*\$"))) {
-                            montoObjetivo = it
-                        }
-                    },
+                    onValueChange = { if (it.matches(Regex("^\\d*\\.?\\d*\$"))) montoObjetivo = it },
                     leadingIcon = { Text("$") },
                     placeholder = { Text("0.00") },
                     modifier = Modifier.fillMaxWidth(),
@@ -164,7 +109,6 @@ fun AddGoal(navController: NavController) {
                 )
             }
         }
-
         item { Spacer(modifier = Modifier.height(20.dp)) }
 
         /* 🔹 MONTO AHORRADO */
@@ -172,11 +116,7 @@ fun AddGoal(navController: NavController) {
             CardField(title = "MONTO INICIAL") {
                 OutlinedTextField(
                     value = montoAhorrado,
-                    onValueChange = {
-                        if (it.matches(Regex("^\\d*\\.?\\d*\$"))) {
-                            montoAhorrado = it
-                        }
-                    },
+                    onValueChange = { if (it.matches(Regex("^\\d*\\.?\\d*\$"))) montoAhorrado = it },
                     leadingIcon = { Text("$") },
                     placeholder = { Text("0.00") },
                     modifier = Modifier.fillMaxWidth(),
@@ -185,53 +125,36 @@ fun AddGoal(navController: NavController) {
                 )
             }
         }
-
         item { Spacer(modifier = Modifier.height(20.dp)) }
 
         /* 🔹 FECHA */
         item {
             CardField(title = "FECHA LÍMITE") {
-                FechaLimiteField(fechaLimite) {
-                    fechaLimite = it
-                }
+                FechaLimiteField(fechaLimite) { fechaLimite = it }
             }
         }
-
         item { Spacer(modifier = Modifier.height(20.dp)) }
 
         /* 🔹 IMAGEN */
         item {
             CardField(title = "IMAGEN") {
-                ImagePicker { uri ->
-                    imageUri = uri
-                }
+                ImagePicker { uri -> imageUri = uri }
             }
         }
-
         item { Spacer(modifier = Modifier.height(30.dp)) }
 
         /* 🔹 BOTÓN */
         item {
             PrimaryButton("Guardar Meta") {
-
-                if (
-                    nombre.isBlank() ||
-                    montoObjetivo.isBlank() ||
-                    fechaLimite.toLongOrNull() == null
-                ) {
-                    println("Faltan datos")
+                if (nombre.isBlank() || montoObjetivo.isBlank() || fechaLimite.toLongOrNull() == null) {
+                    showDialogIncompleto = true
                     return@PrimaryButton
                 }
 
-                if(metasMesActualCant+1>2){
-                    showDialogAlert=true
-
+                if (metasMesActualCant >= 2) {
+                    showDialogAlert = true
                     return@PrimaryButton
-
                 }
-
-
-
 
                 val meta = Meta(
                     id = "",
@@ -243,21 +166,35 @@ fun AddGoal(navController: NavController) {
                     creadoEn = System.currentTimeMillis()
                 )
 
-                viewModel.addMeta(meta, imageUri)
-
-                navController.popBackStack()
+                // CERRAR PANTALLA SOLO CUANDO FIREBASE TERMINE (Como en transacciones)
+                // ASUMIENDO QUE ACTUALIZASTE GoalViewModel.addMeta PARA RECIBIR UN CALLBACK
+                viewModel.addMeta(meta, imageUri) {
+                    navController.popBackStack()
+                }
             }
+
+            Alert(
+                text = "Por favor, llena todos los campos obligatorios.",
+                title = "Datos incompletos",
+                showDialog = showDialogIncompleto,
+                onDismiss = { showDialogIncompleto = false }
+            )
+
             Alert(
                 title = "Límite alcanzado 🔒",
-                text = "Ya usaste tus 2 Metas del mes.\nDesbloquea Metas ilimitados con Premium 💎",
+                text = "Ya creaste tus 2 metas del mes en el plan gratuito.\n\nDesbloquea metas ilimitadas con Premium 💎",
                 showDialog = showDialogAlert,
-                onDismiss = { showDialogAlert = false; navController.navigate("premium") }
+                onDismiss = {
+                    showDialogAlert = false
+                    navController.navigate("premium")
+                }
             )
         }
-
         item { Spacer(modifier = Modifier.height(30.dp)) }
     }
 }
+
+// ... (El resto de tus funciones FechaLimiteField, ImagePicker, y CardField se quedan exactamente igual) ...
 
 @Composable
 fun FechaLimiteField(

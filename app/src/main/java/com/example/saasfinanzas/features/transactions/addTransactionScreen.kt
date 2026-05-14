@@ -295,14 +295,14 @@ fun AddTransaccionScreen(
                 }
 
 
-                if(movimientosMes.size==45){
-                    showDialogRestantes=true
-                }
-                if (movimientosMes.size + 1 > 50) {
-                    showDialogLimite = true
-
-                    return@PrimaryButton
-                }
+//                if(movimientosMes.size==45){
+//                    showDialogRestantes=true
+//                }
+//                if (movimientosMes.size + 1 > 50) {
+//                    showDialogLimite = true
+//
+//                    return@PrimaryButton
+//                }
 
                 val movimiento = Movimiento(
                     id = "",
@@ -313,9 +313,9 @@ fun AddTransaccionScreen(
                     descripcion = descripcion,
                     fecha = fecha
                 )
-                     viewModel.addMovimiento(movimiento)
-                     navController.popBackStack()
-
+                viewModel.addMovimiento(movimiento) {
+                    navController.popBackStack()
+                }
 
 
             }

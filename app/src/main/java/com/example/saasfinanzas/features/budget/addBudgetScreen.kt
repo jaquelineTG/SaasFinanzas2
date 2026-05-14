@@ -330,6 +330,8 @@ fun AddBudget(navController: NavController) {
 
         /* BOTON */
 
+        /* BOTON */
+
         PrimaryButton("Añadir Presupuesto") {
 
             val montoDouble = montoLimite.toDoubleOrNull()
@@ -342,8 +344,7 @@ fun AddBudget(navController: NavController) {
                 mesNumero <= 0 ||
                 anioNumero <= 0
             ) {
-                println("Faltan datos o son inválidos")
-
+                showDialog = true // Mostramos la alerta si faltan datos
                 return@PrimaryButton
             }
 
@@ -357,9 +358,10 @@ fun AddBudget(navController: NavController) {
                 creadoEn = System.currentTimeMillis()
             )
 
-            viewModel.addBudget(presupuesto)
-
-            navController.popBackStack()
+            // CAMBIO AQUÍ: Metemos el popBackStack dentro de las llaves
+            viewModel.addBudget(presupuesto) {
+                navController.popBackStack()
+            }
         }
 
         Alert(

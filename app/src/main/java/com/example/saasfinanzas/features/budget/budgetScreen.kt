@@ -20,12 +20,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.saasfinanzas.data.model.Movimiento
 import com.example.saasfinanzas.data.model.Presupuesto
 import com.example.saasfinanzas.features.transactions.TransactionViewModel
@@ -46,17 +48,20 @@ import com.example.saasfinanzas.features.transactions.TransactionViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BudgetScreen(navController: NavController) {
-    val viewModel: BudgetViewModel=hiltViewModel()
-    val presupuestos=viewModel.presupuestos.collectAsState()
-    val viewmodelMov: TransactionViewModel=hiltViewModel()
-    val movimientosSate=viewmodelMov.movimientos.collectAsState()
-    val movimientos=movimientosSate.value
+    val viewModel: BudgetViewModel = hiltViewModel()
+    val presupuestos = viewModel.presupuestos.collectAsState()
 
+    val viewmodelMov: TransactionViewModel = hiltViewModel()
+    val movimientosSate = viewmodelMov.movimientos.collectAsState()
+    val movimientos = movimientosSate.value
 
-    LaunchedEffect(Unit) {
+    // 1. Escuchamos los cambios en la navegación
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+
+    // 2. Le pasamos navBackStackEntry al LaunchedEffect en lugar de Unit
+    LaunchedEffect(navBackStackEntry) {
         viewModel.getBudgets()
         viewmodelMov.cargarMovimientos()
-
     }
 
 

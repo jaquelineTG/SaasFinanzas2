@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.saasfinanzas.features.auth.AuthViewModel
 import com.google.firebase.auth.FirebaseAuth
 import java.time.Instant
@@ -57,13 +58,16 @@ fun TransactionsScreen(navHostController: NavController) {
     var tipoSeleccionado by remember { mutableStateOf("todas") }
     var fechaSeleccionada by remember { mutableStateOf<LocalDate?>(null) }
     val viewModel: TransactionViewModel = hiltViewModel()
-    val authViewModel: AuthViewModel=hiltViewModel()
     val movimientos by viewModel.movimientos.collectAsState()
 
-    LaunchedEffect(Unit) {
+    // 1. Observamos los cambios en el ciclo de vida de la navegación
+    val navBackStackEntry by navHostController.currentBackStackEntryAsState()
+
+    // 2. Le pasamos navBackStackEntry al LaunchedEffect en lugar de "Unit"
+    // Esto hará que cada vez que esta pantalla se vuelva visible, recargue los datos
+    LaunchedEffect(navBackStackEntry) {
         viewModel.cargarMovimientos()
     }
-
     val listaFiltrada = movimientos.filter { transaccion ->
 
         val filtroTipo = when (tipoSeleccionado) {
