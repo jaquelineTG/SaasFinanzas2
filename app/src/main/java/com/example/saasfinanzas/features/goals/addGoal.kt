@@ -194,7 +194,6 @@ fun AddGoal(navController: NavController) {
     }
 }
 
-// ... (El resto de tus funciones FechaLimiteField, ImagePicker, y CardField se quedan exactamente igual) ...
 
 @Composable
 fun FechaLimiteField(

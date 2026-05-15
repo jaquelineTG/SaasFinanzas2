@@ -308,7 +308,7 @@ fun MovementItem(movimiento: Movimiento) {
                 .fillMaxWidth()
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
-            
+
         ) {
             Box(
                 modifier = Modifier
@@ -327,7 +327,7 @@ fun MovementItem(movimiento: Movimiento) {
                 Text(movimiento.categoriaNombre, color = Color.Gray, style = MaterialTheme.typography.bodySmall)
             }
 
-            // AQUÍ ESTÁ LA LÍNEA SOLUCIONADA:
+
             Text(
                 text = if (movimiento.tipo == "gasto") "-$${movimiento.monto}" else "+$${movimiento.monto}",
                 color = if (movimiento.tipo == "gasto") Color.Red else Color.Blue,

@@ -5,4 +5,5 @@ data class Categoria(
     val nombre: String = "",
     val icono: String = "",// guardas el nombre del icono
     val tipo: String = "" // ingreso o gasto
+
 )

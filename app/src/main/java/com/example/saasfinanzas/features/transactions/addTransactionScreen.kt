@@ -72,7 +72,7 @@ fun AddTransaccionScreen(
     val calendar = java.util.Calendar.getInstance()
     val mesActual = calendar.get(java.util.Calendar.MONTH)
     val anioActual = calendar.get(java.util.Calendar.YEAR)
-
+    val isPremium= true
     val movimientosMes=movimientos.filter  { mov->
         calendar.timeInMillis=mov.fecha
         val mesMov = calendar.get(java.util.Calendar.MONTH)
@@ -230,7 +230,12 @@ fun AddTransaccionScreen(
                         Text("CATEGORÍA", color = Color.Gray)
 
                         IconButton(onClick = {
-                            showDialogCategoria = true
+                            if(isPremium){
+                                navController.navigate("categorias")
+
+                            }else{
+                                showDialogCategoria = true
+                            }
                         }) {
                             Icon(Icons.Default.Add, contentDescription = "Agregar")
                         }

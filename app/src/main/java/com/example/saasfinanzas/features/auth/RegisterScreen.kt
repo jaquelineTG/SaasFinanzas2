@@ -1,5 +1,6 @@
 package com.example.saasfinanzas.features.auth
 
+import android.util.Patterns
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -17,14 +18,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
-import com.example.saasfinanzas.ui.theme.SaasFinanzasTheme
 import com.example.saasfinanzas.ui.theme.greenPrimary
 import kotlinx.coroutines.launch
 
@@ -36,6 +33,12 @@ fun RegisterScreen(navHostController: NavHostController) {
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var acceptedTerms by remember { mutableStateOf(false) }
+
+    // Estados para manejar errores de validación
+    var nameError by remember { mutableStateOf<String?>(null) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    var confirmPasswordError by remember { mutableStateOf<String?>(null) }
 
     val viewModel: AuthViewModel = hiltViewModel()
     val state by viewModel.authState.collectAsState()
@@ -71,7 +74,6 @@ fun RegisterScreen(navHostController: NavHostController) {
         ) {
             Spacer(modifier = Modifier.height(20.dp))
 
-            // CABECERA
             Text(
                 text = "Crea tu cuenta",
                 style = MaterialTheme.typography.headlineMedium.copy(
@@ -91,32 +93,46 @@ fun RegisterScreen(navHostController: NavHostController) {
             // FORMULARIO
             OutlinedTextField(
                 value = name,
-                onValueChange = { name = it },
+                onValueChange = {
+                    name = it
+                    nameError = null
+                },
                 label = { Text("Nombre completo") },
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = greenPrimary) },
+                isError = nameError != null,
+                supportingText = { nameError?.let { Text(it, color = MaterialTheme.colorScheme.error) } },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = {
+                    email = it
+                    emailError = null
+                },
                 label = { Text("Correo electrónico") },
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = greenPrimary) },
+                isError = emailError != null,
+                supportingText = { emailError?.let { Text(it, color = MaterialTheme.colorScheme.error) } },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = {
+                    password = it
+                    passwordError = null
+                    confirmPasswordError = null // Si cambia la pass original, resetea el error de la confirmación
+                },
                 label = { Text("Contraseña") },
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = greenPrimary) },
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -126,27 +142,34 @@ fun RegisterScreen(navHostController: NavHostController) {
                         Icon(imageVector = image, contentDescription = null)
                     }
                 },
+                isError = passwordError != null,
+                supportingText = { passwordError?.let { Text(it, color = MaterialTheme.colorScheme.error) } },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = confirmPassword,
-                onValueChange = { confirmPassword = it },
+                onValueChange = {
+                    confirmPassword = it
+                    confirmPasswordError = null
+                },
                 label = { Text("Confirmar contraseña") },
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = greenPrimary) },
                 visualTransformation = PasswordVisualTransformation(),
+                isError = confirmPasswordError != null,
+                supportingText = { confirmPasswordError?.let { Text(it, color = MaterialTheme.colorScheme.error) } },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // TÉRMINOS
             Row(
@@ -175,8 +198,41 @@ fun RegisterScreen(navHostController: NavHostController) {
             // BOTÓN REGISTRO
             Button(
                 onClick = {
-                    if (password == confirmPassword && acceptedTerms) {
+                    // LÓGICA DE VALIDACIÓN REGISTRO
+                    var isValid = true
+
+                    if (name.isBlank()) {
+                        nameError = "El nombre es requerido"
+                        isValid = false
+                    }
+
+                    if (email.isBlank()) {
+                        emailError = "El correo es requerido"
+                        isValid = false
+                    } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                        emailError = "Ingresa un correo válido"
+                        isValid = false
+                    }
+
+                    if (password.isBlank()) {
+                        passwordError = "La contraseña es requerida"
+                        isValid = false
+                    } else if (password.length < 6) {
+                        passwordError = "La contraseña debe tener al menos 6 caracteres"
+                        isValid = false
+                    }
+
+                    if (confirmPassword != password) {
+                        confirmPasswordError = "Las contraseñas no coinciden"
+                        isValid = false
+                    }
+
+                    if (isValid && acceptedTerms) {
                         viewModel.register(email, password, name)
+                    } else if (!acceptedTerms) {
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("Debes aceptar los términos y condiciones")
+                        }
                     }
                 },
                 modifier = Modifier
@@ -184,7 +240,7 @@ fun RegisterScreen(navHostController: NavHostController) {
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = greenPrimary),
-                enabled = state !is AuthState.Loading && acceptedTerms && name.isNotEmpty()
+                enabled = state !is AuthState.Loading
             ) {
                 if (state is AuthState.Loading) {
                     CircularProgressIndicator(
@@ -228,7 +284,7 @@ fun RegisterScreen(navHostController: NavHostController) {
                     },
                     modifier = Modifier.weight(1f).height(48.dp),
                     shape = RoundedCornerShape(12.dp),
-                    enabled = state !is AuthState.Loading // Para evitar doble clic
+                    enabled = state !is AuthState.Loading
                 ) {
                     Text("Google", color = Color.Black)
                 }

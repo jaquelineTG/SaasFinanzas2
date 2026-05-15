@@ -1,5 +1,6 @@
 package com.example.saasfinanzas.features.auth
 
+import android.util.Patterns
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,14 +22,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.saasfinanzas.R
-import com.example.saasfinanzas.ui.theme.SaasFinanzasTheme
 import com.example.saasfinanzas.ui.theme.greenPrimary
 import kotlinx.coroutines.launch
 
@@ -37,6 +35,10 @@ fun LoginScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+
+    // Estados para manejar errores de validación
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
 
     val viewModel: AuthViewModel = hiltViewModel()
     val state by viewModel.authState.collectAsState()
@@ -79,7 +81,6 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Título y Subtítulo
             Text(
                 text = "Bienvenido de nuevo",
                 style = MaterialTheme.typography.headlineSmall.copy(
@@ -99,28 +100,46 @@ fun LoginScreen(navController: NavController) {
             // Campo de Email
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = {
+                    email = it
+                    emailError = null // Limpia el error al escribir
+                },
                 label = { Text("Correo electrónico") },
                 placeholder = { Text("ejemplo@correo.com") },
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = greenPrimary) },
+                isError = emailError != null,
+                supportingText = {
+                    if (emailError != null) {
+                        Text(text = emailError!!, color = MaterialTheme.colorScheme.error)
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp)) // Reducido por el supportingText
 
             // Campo de Contraseña
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = {
+                    password = it
+                    passwordError = null // Limpia el error al escribir
+                },
                 label = { Text("Contraseña") },
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = greenPrimary) },
                 trailingIcon = {
                     val image = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(imageVector = image, contentDescription = "Toggle password visibility")
+                    }
+                },
+                isError = passwordError != null,
+                supportingText = {
+                    if (passwordError != null) {
+                        Text(text = passwordError!!, color = MaterialTheme.colorScheme.error)
                     }
                 },
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -130,7 +149,6 @@ fun LoginScreen(navController: NavController) {
                 singleLine = true
             )
 
-            // Olvidé mi contraseña (Opcional pero recomendado)
             Text(
                 text = "¿Olvidaste tu contraseña?",
                 modifier = Modifier
@@ -146,7 +164,27 @@ fun LoginScreen(navController: NavController) {
 
             // Botón Entrar
             Button(
-                onClick = { viewModel.login(email, password) },
+                onClick = {
+                    // LÓGICA DE VALIDACIÓN LOGIN
+                    var isValid = true
+
+                    if (email.isBlank()) {
+                        emailError = "El correo es requerido"
+                        isValid = false
+                    } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                        emailError = "Ingresa un correo válido"
+                        isValid = false
+                    }
+
+                    if (password.isBlank()) {
+                        passwordError = "La contraseña es requerida"
+                        isValid = false
+                    }
+
+                    if (isValid) {
+                        viewModel.login(email, password)
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -163,11 +201,9 @@ fun LoginScreen(navController: NavController) {
             }
             Spacer(modifier = Modifier.height(32.dp))
 
-            // NUEVO BOTÓN DE GOOGLE PARA LOGIN
             OutlinedButton(
                 onClick = {
-                    coroutineScope.
-                    launch {
+                    coroutineScope.launch {
                         val token = doGoogleSignIn(context)
                         if (token != null) {
                             viewModel.loginWithGoogle(token)
@@ -183,11 +219,8 @@ fun LoginScreen(navController: NavController) {
                 Text("Continuar con Google", color = Color.Black, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
 
-
-
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Registro
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("¿Aún no tienes cuenta? ", color = Color.Gray)
                 Text(

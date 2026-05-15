@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -41,6 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -103,6 +105,8 @@ fun AddBudget(navController: NavController) {
     var expandedMes by remember { mutableStateOf(false) }
     var expandedAnio by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
+    var showDialogCategoria by rememberSaveable { mutableStateOf(false) }
+    val isPremium = true
 
     Column(
         modifier = Modifier
@@ -140,17 +144,36 @@ fun AddBudget(navController: NavController) {
             colors = CardDefaults.cardColors(containerColor = Color.White),
             modifier = Modifier.fillMaxWidth()
         ) {
-
             Column(Modifier.padding(16.dp)) {
 
-                Text(
-                    "CATEGORÍA",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color.Gray
-                )
+                // Fila que contiene el título y el botón de agregar
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "CATEGORÍA",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color.Gray
+                    )
+
+                    IconButton(onClick = {
+                        if(isPremium){
+                            navController.navigate("categorias")
+
+                        }else{
+                            showDialogCategoria = true
+                        }
+
+                    }) {
+                        Icon(Icons.Default.Add, contentDescription = "Agregar categoría")
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                // Tu DropdownMenuBox intacto
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded }
@@ -189,6 +212,15 @@ fun AddBudget(navController: NavController) {
                 }
             }
         }
+        Alert(
+            title = "Desbloquea categorías personalizadas",
+            text = "Crea tus propias categorías como \"Café\", \"Gym\" o \"Salidas\" y organiza tus finanzas a tu manera.\n\nDisponible solo en Premium.",
+            showDialog = showDialogCategoria,
+            onDismiss = {
+                showDialogCategoria = false
+                navController.navigate("premium")
+            }
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
 
