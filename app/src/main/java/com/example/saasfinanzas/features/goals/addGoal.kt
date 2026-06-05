@@ -166,8 +166,7 @@ fun AddGoal(navController: NavController) {
                     creadoEn = System.currentTimeMillis()
                 )
 
-                // CERRAR PANTALLA SOLO CUANDO FIREBASE TERMINE (Como en transacciones)
-                // ASUMIENDO QUE ACTUALIZASTE GoalViewModel.addMeta PARA RECIBIR UN CALLBACK
+                // CERRAR PANTALLA SOLO CUANDO FIREBASE TERMINE
                 viewModel.addMeta(meta, imageUri) {
                     navController.popBackStack()
                 }

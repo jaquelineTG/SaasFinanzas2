@@ -98,7 +98,16 @@ fun Home(navHostController: NavHostController) {
     }
 
     val meta = metas.lastOrNull()
-    val ultimos = transacciones.takeLast(3).reversed() // reversed para que el más nuevo salga primero
+    val ultimos = transacciones
+        .filter { mov ->
+            val calMov = Calendar.getInstance() //es la fecha actual
+            calMov.timeInMillis = mov.fecha// . timeinmillis es el mismo formato de la mov.fecha long asi 1780610400000L
+
+            calMov.get(Calendar.MONTH) == mesActual &&
+            calMov.get(Calendar.YEAR) == anioActual
+        }
+        .takeLast(3)
+        .reversed() // reversed para que el más nuevo salga primero
 
     Scaffold(
         containerColor = Color(0xFFF3F4F6),

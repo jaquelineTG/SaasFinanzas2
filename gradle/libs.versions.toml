@@ -37,6 +37,8 @@ androidxJunit = "1.3.0"
 espresso = "3.7.0"
 firebaseMessagingKtx = "25.0.1"
 firebaseMessagingKtxVersion = "25.0.2"
+animationCore = "1.11.2"
+foundation = "1.11.2"
 
 
 [libraries]
@@ -107,6 +109,8 @@ androidx-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 androidx-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 google-firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
 com-google-firebase-firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtxVersion" }
+androidx-animation-core = { group = "androidx.compose.animation", name = "animation-core", version.ref = "animationCore" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 
 [plugins]

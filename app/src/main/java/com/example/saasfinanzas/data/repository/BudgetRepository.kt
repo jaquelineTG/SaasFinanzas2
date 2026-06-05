@@ -14,4 +14,14 @@ class BudgetRepository  @Inject constructor(
         dataSource.addBudget(uid,presupuesto)
     suspend fun getBudgets(uid: String) =
         dataSource.getBudgets(uid)
+
+    suspend fun deleteBudget(
+        uid: String,
+        budgetId: String
+    ) = dataSource.deleteBudget(uid, budgetId)
+
+    suspend fun updateBudget(
+        uid: String,
+        presupuesto: Presupuesto
+    ) = dataSource.updateBudget(uid, presupuesto)
 }

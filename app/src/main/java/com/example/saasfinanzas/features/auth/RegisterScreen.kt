@@ -169,29 +169,8 @@ fun RegisterScreen(navHostController: NavHostController) {
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
 
-            // TÉRMINOS
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Checkbox(
-                    checked = acceptedTerms,
-                    onCheckedChange = { acceptedTerms = it },
-                    colors = CheckboxDefaults.colors(checkedColor = greenPrimary)
-                )
-                Text(
-                    text = "Acepto los ",
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Text(
-                    text = "Términos y Condiciones",
-                    color = greenPrimary,
-                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier.clickable { /* Abrir Web */ }
-                )
-            }
+
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -227,13 +206,7 @@ fun RegisterScreen(navHostController: NavHostController) {
                         isValid = false
                     }
 
-                    if (isValid && acceptedTerms) {
-                        viewModel.register(email, password, name)
-                    } else if (!acceptedTerms) {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar("Debes aceptar los términos y condiciones")
-                        }
-                    }
+
                 },
                 modifier = Modifier
                     .fillMaxWidth()

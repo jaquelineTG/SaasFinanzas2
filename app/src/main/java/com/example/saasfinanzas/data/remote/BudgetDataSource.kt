@@ -50,4 +50,46 @@ suspend fun getBudgets(uid: String): Result<List<Presupuesto>> {
         Result.failure(e)
     }
 }
+
+    suspend fun deleteBudget(
+        uid: String,
+        budgetId: String
+    ): Result<Unit> {
+
+        return try {
+
+            firestore.collection("usuarios")
+                .document(uid)
+                .collection("presupuestos")
+                .document(budgetId)
+                .delete()
+                .await()
+
+            Result.success(Unit)
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateBudget(
+        uid: String,
+        presupuesto: Presupuesto
+    ): Result<Unit> {
+
+        return try {
+
+            firestore.collection("usuarios")
+                .document(uid)
+                .collection("presupuestos")
+                .document(presupuesto.id)
+                .set(presupuesto)
+                .await()
+
+            Result.success(Unit)
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

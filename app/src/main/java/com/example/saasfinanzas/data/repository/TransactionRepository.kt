@@ -14,4 +14,14 @@ class TransactionRepository @Inject constructor(
 
     suspend fun addMovimiento(uid: String,movimiento: Movimiento) =
         dataSource.addMovimiento(uid,movimiento)
+
+    suspend fun deleteMovimiento(
+        uid: String,
+        movimientoId: String
+    ) = dataSource.deleteMovimiento(uid, movimientoId)
+
+    suspend fun updateMovimiento(
+        uid: String,
+        movimiento: Movimiento
+    ) = dataSource.updateMovimiento(uid, movimiento)
 }

@@ -2,6 +2,7 @@ package com.example.saasfinanzas.features.transactions
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -29,11 +30,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.saasfinanzas.data.model.Movimiento
 import com.example.saasfinanzas.features.auth.AuthViewModel
 import com.google.firebase.auth.FirebaseAuth
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import androidx.compose.foundation.interaction.MutableInteractionSource
 
 //data class Transacciones(
 //    val categoriaNombre: String,
@@ -59,6 +62,9 @@ fun TransactionsScreen(navHostController: NavController) {
     var fechaSeleccionada by remember { mutableStateOf<LocalDate?>(null) }
     val viewModel: TransactionViewModel = hiltViewModel()
     val movimientos by viewModel.movimientos.collectAsState()
+    var movimientoEditar by remember {
+        mutableStateOf<Movimiento?>(null)
+    }
 
     // 1. Observamos los cambios en el ciclo de vida de la navegación
     val navBackStackEntry by navHostController.currentBackStackEntryAsState()
@@ -128,10 +134,31 @@ fun TransactionsScreen(navHostController: NavController) {
                     monto = transaccion.monto,
                     descripcion = transaccion.descripcion,
                     tipo=transaccion.tipo,
-                    onDelete = { /* borrar en viewModel */ },
-                    onEdit = { /* navegar a editar */ }
+                    onDelete = {   viewModel.deleteMovimiento(transaccion.id)},
+                    onEdit = {   movimientoEditar = transaccion }
                 )
             }
+        }
+
+        movimientoEditar?.let { movimiento ->
+
+            EditMovimientoDialog(
+                movimiento = movimiento,
+                onDismiss = {
+                    movimientoEditar = null
+                },
+                onGuardar = { descripcion, monto ->
+
+                    viewModel.updateMovimiento(
+                        movimiento.copy(
+                            descripcion = descripcion,
+                            monto = monto
+                        )
+                    )
+
+                    movimientoEditar = null
+                }
+            )
         }
     }
 }
@@ -158,61 +185,51 @@ fun TransaccionItem(
     onEdit: () -> Unit
 ) {
 
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            when (value) {
-                SwipeToDismissBoxValue.EndToStart -> {
-                    onDelete()
-                    true
-                }
-                SwipeToDismissBoxValue.StartToEnd -> {
-                    onEdit()
-                    false // no lo desaparece
-                }
-                else -> false
-            }
-        }
+    var expanded by remember {
+        mutableStateOf(false)
+    }
+
+    val offsetX by animateDpAsState(
+        targetValue = if (expanded) (-100).dp else 0.dp,
+        label = "offset"
     )
 
-    SwipeToDismissBox(
-        state = dismissState,
-        backgroundContent = {
-
-            val color = when (dismissState.dismissDirection) {
-                SwipeToDismissBoxValue.EndToStart -> Color.Red
-                SwipeToDismissBoxValue.StartToEnd -> Color.Blue
-                else -> Color.Transparent
-            }
-
-            val icon = when (dismissState.dismissDirection) {
-                SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
-                SwipeToDismissBoxValue.StartToEnd -> Icons.Default.Edit
-                else -> null
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(color)
-                    .padding(horizontal = 20.dp),
-                contentAlignment = when (dismissState.dismissDirection) {
-                    SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
-                    SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
-                    else -> Alignment.Center
-                }
-            ) {
-                icon?.let {
-                    Icon(
-                        imageVector = it,
-                        contentDescription = null,
-                        tint = Color.White
-                    )
-                }
-            }
-        }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
 
-        //  CARD ORIGINAL
+        // BOTONES DETRÁS DE LA CARD
+        Row(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            IconButton(
+                onClick = onEdit
+            ) {
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = "Editar",
+                    tint = Color(0xFF2196F3)
+                )
+            }
+
+            IconButton(
+                onClick = onDelete
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Eliminar",
+                    tint = Color.Red
+                )
+            }
+        }
+
+        // CARD
         ElevatedCard(
             colors = CardDefaults.elevatedCardColors(
                 containerColor = Color(0xFFFDFDFD)
@@ -221,7 +238,13 @@ fun TransaccionItem(
             shape = MaterialTheme.shapes.large,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .offset(x = offsetX)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    expanded = !expanded
+                }
         ) {
 
             Row(
@@ -234,9 +257,13 @@ fun TransaccionItem(
                 Box(
                     modifier = Modifier
                         .size(48.dp)
-                        .background(Color(0xFFE8F5E9), CircleShape),
+                        .background(
+                            Color(0xFFE8F5E9),
+                            CircleShape
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
+
                     Icon(
                         imageVector = getIconByCategory(categoriaNombre),
                         contentDescription = null,
@@ -267,7 +294,10 @@ fun TransaccionItem(
                 Text(
                     text = "$${"%.2f".format(if (tipo == "gasto") -monto else monto)}",
                     style = MaterialTheme.typography.titleMedium,
-                    color = if (tipo == "gasto") Color.Red else Color(0xFF22C55E)
+                    color = if (tipo == "gasto")
+                        Color.Red
+                    else
+                        Color(0xFF22C55E)
                 )
             }
         }
@@ -327,7 +357,12 @@ fun FiltroChip(
     Box(
         modifier = Modifier
             .background(background, CircleShape)
-            .clickable { onClick() }
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                onClick()
+            }
             .padding(horizontal = 14.dp, vertical = 6.dp)
     ) {
 
@@ -354,7 +389,12 @@ fun FechaFiltro(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .background(Color(0xFFF1F1F1), CircleShape)
-                .clickable { showPicker = true }
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    showPicker = true
+                }
                 .padding(horizontal = 14.dp, vertical = 6.dp)
         ) {
 
@@ -417,4 +457,82 @@ fun FechaFiltro(
             }
         }
     }
+
+}
+
+@Composable
+fun EditMovimientoDialog(
+    movimiento: Movimiento,
+    onDismiss: () -> Unit,
+    onGuardar: (String, Double) -> Unit
+) {
+
+    var descripcion by remember {
+        mutableStateOf(movimiento.descripcion)
+    }
+
+    var monto by remember {
+        mutableStateOf(movimiento.monto.toString())
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+
+        title = {
+            Text("Editar movimiento")
+        },
+
+        text = {
+
+            Column {
+
+                OutlinedTextField(
+                    value = descripcion,
+                    onValueChange = {
+                        descripcion = it
+                    },
+                    label = {
+                        Text("Descripción")
+                    }
+                )
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = monto,
+                    onValueChange = {
+                        monto = it
+                    },
+                    label = {
+                        Text("Monto")
+                    }
+                )
+            }
+        },
+
+        confirmButton = {
+
+            TextButton(
+                onClick = {
+                    onGuardar(
+                        descripcion,
+                        monto.toDoubleOrNull() ?: 0.0
+                    )
+                }
+            ) {
+                Text("Guardar")
+            }
+        },
+
+        dismissButton = {
+
+            TextButton(
+                onClick = onDismiss
+            ) {
+                Text("Cancelar")
+            }
+        }
+    )
 }

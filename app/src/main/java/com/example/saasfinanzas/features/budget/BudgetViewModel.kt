@@ -50,6 +50,52 @@ class BudgetViewModel@Inject constructor(
         }
     }
 
+    fun deleteBudget(
+        budgetId: String
+    ) {
+
+        val uid = authRepository.getCurrentUserUid() ?: return
+
+        viewModelScope.launch {
+
+            repository.deleteBudget(
+                uid,
+                budgetId
+            ).onSuccess {
+
+                _presupuestos.value =
+                    _presupuestos.value.filter {
+                        it.id != budgetId
+                    }
+            }
+        }
+    }
+
+    fun updateBudget(
+        presupuesto: Presupuesto
+    ) {
+
+        val uid = authRepository.getCurrentUserUid() ?: return
+
+        viewModelScope.launch {
+
+            repository.updateBudget(
+                uid,
+                presupuesto
+            ).onSuccess {
+
+                _presupuestos.value =
+                    _presupuestos.value.map {
+
+                        if (it.id == presupuesto.id)
+                            presupuesto
+                        else
+                            it
+                    }
+            }
+        }
+    }
+
 
 
 

@@ -25,7 +25,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.saasfinanzas.R
 import com.example.saasfinanzas.ui.theme.SaasFinanzasTheme
 import com.example.saasfinanzas.ui.theme.greenGradient
-import com.example.saasfinanzas.ui.theme.greenPrimary // Asegúrate de tener este color
+
 import com.example.saasfinanzas.ui.theme.white
 
 @Composable

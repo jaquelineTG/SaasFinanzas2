@@ -63,4 +63,46 @@ class TransactionDataSource  @Inject constructor(){
             Result.failure(e)
         }
     }
+
+    suspend fun deleteMovimiento(
+        uid: String,
+        movimientoId: String
+    ): Result<Unit> {
+
+        return try {
+
+            firestore.collection("usuarios")
+                .document(uid)
+                .collection("movimientos")
+                .document(movimientoId)
+                .delete()
+                .await()
+
+            Result.success(Unit)
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateMovimiento(
+        uid: String,
+        movimiento: Movimiento
+    ): Result<Unit> {
+
+        return try {
+
+            firestore.collection("usuarios")
+                .document(uid)
+                .collection("movimientos")
+                .document(movimiento.id)
+                .set(movimiento)
+                .await()
+
+            Result.success(Unit)
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

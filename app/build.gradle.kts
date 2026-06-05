@@ -55,6 +55,8 @@ kapt {
 dependencies {
 
     implementation(libs.hilt.android)
+    implementation(libs.androidx.animation.core)
+    implementation(libs.androidx.foundation)
     kapt(libs.hilt.compiler)
 
     // Firebase (BOM primero)

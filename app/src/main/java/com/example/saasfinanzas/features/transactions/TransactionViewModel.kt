@@ -98,4 +98,49 @@ class TransactionViewModel @Inject constructor(
             return null
         }
     }
+
+    fun deleteMovimiento(movimientoId: String) {
+
+        val uid = authRepository.getCurrentUserUid() ?: return
+
+        viewModelScope.launch {
+
+            repository.deleteMovimiento(
+                uid,
+                movimientoId
+            ).onSuccess {
+
+                _movimientos.value =
+                    _movimientos.value.filter {
+                        it.id != movimientoId
+                    }
+
+            }
+        }
+    }
+
+    fun updateMovimiento(
+        movimiento: Movimiento
+    ) {
+
+        val uid = authRepository.getCurrentUserUid() ?: return
+
+        viewModelScope.launch {
+
+            repository.updateMovimiento(
+                uid,
+                movimiento
+            ).onSuccess {
+
+                _movimientos.value =
+                    _movimientos.value.map {
+
+                        if (it.id == movimiento.id)
+                            movimiento
+                        else
+                            it
+                    }
+            }
+        }
+    }
 }
