@@ -65,6 +65,17 @@ fun BudgetScreen(navController: NavController) {
     var presupuestoEditar by remember {
         mutableStateOf<Presupuesto?>(null)
     }
+    var presupuestoEliminar by remember {
+        mutableStateOf<Presupuesto?>(null)
+    }
+
+    var mensajeExito by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    var presupuestoExpandidoId by remember {
+        mutableStateOf<String?>(null)
+    }
     // 1. Escuchamos los cambios en la navegación
     val navBackStackEntry by navController.currentBackStackEntryAsState()
 
@@ -134,10 +145,18 @@ fun BudgetScreen(navController: NavController) {
                         presupuesto = presupuesto,
                         sumGastos = sumGastos,
 
+                        expanded = presupuestoExpandidoId == presupuesto.id,
+
+                        onExpand = {
+                            presupuestoExpandidoId =
+                                if (presupuestoExpandidoId == presupuesto.id)
+                                    null
+                                else
+                                    presupuesto.id
+                        },
+
                         onDelete = {
-                            viewModel.deleteBudget(
-                                presupuesto.id
-                            )
+                            presupuestoEliminar = presupuesto
                         },
 
                         onEdit = {
@@ -156,6 +175,8 @@ fun BudgetScreen(navController: NavController) {
                         presupuestoEditar = null
                     },
 
+
+
                     onGuardar = { categoria, monto ->
 
                         viewModel.updateBudget(
@@ -165,7 +186,104 @@ fun BudgetScreen(navController: NavController) {
                             )
                         )
 
+                        presupuestoExpandidoId = null
                         presupuestoEditar = null
+
+                        mensajeExito =
+                            "Presupuesto actualizado correctamente"
+                    }
+                )
+            }
+
+            presupuestoEliminar?.let { presupuesto ->
+
+                AlertDialog(
+                    onDismissRequest = {
+                        presupuestoEliminar = null
+                    },
+
+                    containerColor = Color(0xFFE8F5E9),
+                    titleContentColor = Color(0xFF1B5E20),
+                    textContentColor = Color(0xFF2E7D32),
+
+                    title = {
+                        Text("Eliminar presupuesto")
+                    },
+
+                    text = {
+                        Text("¿Estás seguro de eliminar este presupuesto?")
+                    },
+
+                    confirmButton = {
+
+                        TextButton(
+                            onClick = {
+
+                                viewModel.deleteBudget(
+                                    presupuesto.id
+                                )
+
+                                presupuestoExpandidoId = null
+                                presupuestoEliminar = null
+
+                                mensajeExito =
+                                    "Presupuesto eliminado correctamente"
+
+                            },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = Color(0xFF2E7D32)
+                            )
+                        ) {
+                            Text("Eliminar")
+                        }
+                    },
+
+                    dismissButton = {
+
+                        TextButton(
+                            onClick = {
+                                presupuestoEliminar = null
+                            },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = Color.Gray
+                            )
+                        ) {
+                            Text("Cancelar")
+                        }
+                    }
+                )
+            }
+            mensajeExito?.let { mensaje ->
+
+                AlertDialog(
+                    onDismissRequest = {
+                        mensajeExito = null
+                    },
+
+                    containerColor = Color(0xFFE8F5E9),
+                    titleContentColor = Color(0xFF1B5E20),
+                    textContentColor = Color(0xFF2E7D32),
+
+                    title = {
+                        Text("Éxito")
+                    },
+
+                    text = {
+                        Text(mensaje)
+                    },
+
+                    confirmButton = {
+
+                        TextButton(
+                            onClick = {
+                                mensajeExito = null
+                            },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = Color(0xFF2E7D32)
+                            )
+                        ) {
+                            Text("Aceptar")
+                        }
                     }
                 )
             }
@@ -197,6 +315,9 @@ fun EditBudgetDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = Color(0xFFE8F5E9),
+        titleContentColor = Color(0xFF1B5E20),
+        textContentColor = Color(0xFF2E7D32),
 
         title = {
             Text("Editar presupuesto")
@@ -241,7 +362,10 @@ fun EditBudgetDialog(
                         categoria,
                         monto.toDoubleOrNull() ?: 0.0
                     )
-                }
+                },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = Color(0xFF2E7D32)
+                )
             ) {
                 Text("Guardar")
             }
@@ -250,7 +374,10 @@ fun EditBudgetDialog(
         dismissButton = {
 
             TextButton(
-                onClick = onDismiss
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = Color.Gray
+                )
             ) {
                 Text("Cancelar")
             }
@@ -260,18 +387,18 @@ fun EditBudgetDialog(
 
 
 @Composable
-fun BudgetItem(presupuesto: Presupuesto,
-               sumGastos: Double,
-               onDelete: () -> Unit,
-               onEdit: () -> Unit) {
+fun BudgetItem( presupuesto: Presupuesto,
+                sumGastos: Double,
+                expanded: Boolean,
+                onExpand: () -> Unit,
+                onDelete: () -> Unit,
+                onEdit: () -> Unit) {
 
 
     val progress: Float = (sumGastos.toFloat() / presupuesto.montoLimite.toFloat())
         .coerceIn(0f, 1f)
 
-    var expanded by remember {
-        mutableStateOf(false)
-    }
+
 
     val offsetX by animateDpAsState(
         targetValue = if (expanded) (-100).dp else 0.dp,
@@ -328,7 +455,7 @@ fun BudgetItem(presupuesto: Presupuesto,
                     },
                     indication = null
                 ) {
-                    expanded = !expanded
+                    onExpand()
                 }
         ) {
 

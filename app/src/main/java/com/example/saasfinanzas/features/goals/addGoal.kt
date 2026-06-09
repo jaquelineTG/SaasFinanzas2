@@ -26,7 +26,22 @@ import com.example.saasfinanzas.data.model.Meta
 import com.example.saasfinanzas.features.components.Alert
 import com.example.saasfinanzas.features.components.PrimaryButton
 import java.util.Calendar
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.text.NumberFormat
+fun formatMiles(input: String): String {
 
+    val limpio = input.replace(",", "")
+
+    if (limpio.isEmpty()) return ""
+
+    return try {
+        NumberFormat.getNumberInstance(Locale.US)
+            .format(limpio.toLong())
+    } catch (e: Exception) {
+        input
+    }
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddGoal(navController: NavController) {
@@ -34,7 +49,7 @@ fun AddGoal(navController: NavController) {
     var nombre by remember { mutableStateOf("") }
     var montoObjetivo by remember { mutableStateOf("") }
     var montoAhorrado by remember { mutableStateOf("") }
-    var fechaLimite by remember { mutableStateOf("") }
+
     var imageUri by remember { mutableStateOf<Uri?>(null) }
 
     var showDialogIncompleto by remember { mutableStateOf(false) }
@@ -47,6 +62,8 @@ fun AddGoal(navController: NavController) {
     val calendar = Calendar.getInstance()
     val mesActual = calendar.get(Calendar.MONTH)
     val anioActual = calendar.get(Calendar.YEAR)
+    var fechaLimiteTexto by remember { mutableStateOf("") }
+    var fechaLimiteMillis by remember { mutableStateOf<Long?>(null) }
 
     val metasMesActualCant = metas.filter { meta ->
         val cal = Calendar.getInstance().apply { timeInMillis = meta.creadoEn }
@@ -100,7 +117,14 @@ fun AddGoal(navController: NavController) {
             CardField(title = "MONTO OBJETIVO") {
                 OutlinedTextField(
                     value = montoObjetivo,
-                    onValueChange = { if (it.matches(Regex("^\\d*\\.?\\d*\$"))) montoObjetivo = it },
+                    onValueChange = { value ->
+
+                        val numeros = value.replace(",", "")
+
+                        if (numeros.all { it.isDigit() }) {
+                            montoObjetivo = formatMiles(numeros)
+                        }
+                    },
                     leadingIcon = { Text("$") },
                     placeholder = { Text("0.00") },
                     modifier = Modifier.fillMaxWidth(),
@@ -116,7 +140,14 @@ fun AddGoal(navController: NavController) {
             CardField(title = "MONTO INICIAL") {
                 OutlinedTextField(
                     value = montoAhorrado,
-                    onValueChange = { if (it.matches(Regex("^\\d*\\.?\\d*\$"))) montoAhorrado = it },
+                    onValueChange = { value ->
+
+                        val numeros = value.replace(",", "")
+
+                        if (numeros.all { it.isDigit() }) {
+                            montoAhorrado = formatMiles(numeros)
+                        }
+                    },
                     leadingIcon = { Text("$") },
                     placeholder = { Text("0.00") },
                     modifier = Modifier.fillMaxWidth(),
@@ -130,7 +161,13 @@ fun AddGoal(navController: NavController) {
         /* 🔹 FECHA */
         item {
             CardField(title = "FECHA LÍMITE") {
-                FechaLimiteField(fechaLimite) { fechaLimite = it }
+                FechaLimiteField(
+                    fecha = fechaLimiteTexto,
+                    onFechaSeleccionada = { texto, millis ->
+                        fechaLimiteTexto = texto
+                        fechaLimiteMillis = millis
+                    }
+                )
             }
         }
         item { Spacer(modifier = Modifier.height(20.dp)) }
@@ -146,7 +183,11 @@ fun AddGoal(navController: NavController) {
         /* 🔹 BOTÓN */
         item {
             PrimaryButton("Guardar Meta") {
-                if (nombre.isBlank() || montoObjetivo.isBlank() || fechaLimite.toLongOrNull() == null) {
+                if (
+                    nombre.isBlank() ||
+                    montoObjetivo.isBlank() ||
+                    fechaLimiteMillis == null
+                ) {
                     showDialogIncompleto = true
                     return@PrimaryButton
                 }
@@ -159,9 +200,14 @@ fun AddGoal(navController: NavController) {
                 val meta = Meta(
                     id = "",
                     nombre = nombre,
-                    montoObjetivo = montoObjetivo.toDoubleOrNull() ?: 0.0,
-                    montoAhorrado = montoAhorrado.toDoubleOrNull() ?: 0.0,
-                    fechaLimite = fechaLimite.toLongOrNull() ?: 0L,
+                    montoObjetivo = montoObjetivo
+                        .replace(",", "")
+                        .toDoubleOrNull() ?: 0.0,
+
+                    montoAhorrado = montoAhorrado
+                        .replace(",", "")
+                        .toDoubleOrNull() ?: 0.0,
+                    fechaLimite = fechaLimiteMillis ?: 0L,
                     imageUrl = "",
                     creadoEn = System.currentTimeMillis()
                 )
@@ -194,17 +240,24 @@ fun AddGoal(navController: NavController) {
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FechaLimiteField(
     fecha: String,
-    onFechaChange: (String) -> Unit
+    onFechaSeleccionada: (String, Long) -> Unit
 ) {
+
+    var showPicker by remember {
+        mutableStateOf(false)
+    }
+
+    val datePickerState = rememberDatePickerState()
 
     OutlinedTextField(
         value = fecha,
-        onValueChange = onFechaChange,
+        onValueChange = {},
+        readOnly = true,
         label = { Text("Fecha límite") },
-        placeholder = { Text("mm/dd/yyyy") },
 
         trailingIcon = {
             Icon(
@@ -220,6 +273,76 @@ fun FechaLimiteField(
 
         singleLine = true
     )
+
+    LaunchedEffect(Unit) {
+        // opcional
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .offset(y = (-56).dp)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxSize(),
+            color = Color.Transparent,
+            onClick = {
+                showPicker = true
+            }
+        ) {}
+    }
+
+    if (showPicker) {
+
+        DatePickerDialog(
+            onDismissRequest = {
+                showPicker = false
+            },
+
+            confirmButton = {
+
+                TextButton(
+                    onClick = {
+
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val formato = SimpleDateFormat(
+                                "dd/MM/yyyy",
+                                Locale.getDefault()
+                            )
+
+                            onFechaSeleccionada(
+                                formato.format(millis),
+                                millis
+                            )
+                        }
+
+                        showPicker = false
+                    }
+                ) {
+                    Text("Aceptar")
+                }
+            },
+
+            dismissButton = {
+
+                TextButton(
+                    onClick = {
+                        showPicker = false
+                    }
+                ) {
+                    Text("Cancelar")
+                }
+            }
+
+        ) {
+
+            DatePicker(
+                state = datePickerState
+            )
+        }
+    }
 }
 
 //@Composable
@@ -273,7 +396,18 @@ fun ImagePicker(onImageSelected: (Uri?) -> Unit) {
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-        Button(onClick = { launcher.launch("image/*") }) {
+        Button(
+            onClick = {
+                launcher.launch("image/*")
+            },
+
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF22C55E),
+                contentColor = Color.White
+            ),
+
+            shape = RoundedCornerShape(14.dp)
+        ) {
             Text("Seleccionar Imagen")
         }
 

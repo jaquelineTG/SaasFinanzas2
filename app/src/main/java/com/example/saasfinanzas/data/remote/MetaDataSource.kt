@@ -1,6 +1,7 @@
 package com.example.saasfinanzas.data.remote
 
 import android.net.Uri
+import android.util.Log
 import com.example.saasfinanzas.data.model.Meta
 import com.example.saasfinanzas.data.model.Movimiento
 import com.google.firebase.firestore.FirebaseFirestore
@@ -41,12 +42,22 @@ class MetaDataSource @Inject constructor(){
     }
 
     suspend fun uploadImage(uid: String, uri: Uri): String {
-        val ref = storage.reference
-            .child("metas/$uid/${System.currentTimeMillis()}.jpg")
+
+        val ruta = "metas/$uid/${System.currentTimeMillis()}.jpg"
+
+        Log.d("STORAGE", "Subiendo a: $ruta")
+
+        val ref = storage.reference.child(ruta)
 
         ref.putFile(uri).await()
 
-        return ref.downloadUrl.await().toString()
+        Log.d("STORAGE", "Imagen subida correctamente")
+
+        val url = ref.downloadUrl.await().toString()
+
+        Log.d("STORAGE", "URL: $url")
+
+        return url
     }
 
 

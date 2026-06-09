@@ -65,6 +65,16 @@ fun TransactionsScreen(navHostController: NavController) {
     var movimientoEditar by remember {
         mutableStateOf<Movimiento?>(null)
     }
+    var mostrarConfirmacionEliminar by remember {
+        mutableStateOf<Movimiento?>(null)
+    }
+
+    var mensajeExito by remember {
+        mutableStateOf<String?>(null)
+    }
+    var movimientoExpandidoId by remember {
+        mutableStateOf<String?>(null)
+    }
 
     // 1. Observamos los cambios en el ciclo de vida de la navegación
     val navBackStackEntry by navHostController.currentBackStackEntryAsState()
@@ -133,9 +143,21 @@ fun TransactionsScreen(navHostController: NavController) {
                     categoriaNombre = transaccion.categoriaNombre,
                     monto = transaccion.monto,
                     descripcion = transaccion.descripcion,
-                    tipo=transaccion.tipo,
-                    onDelete = {   viewModel.deleteMovimiento(transaccion.id)},
-                    onEdit = {   movimientoEditar = transaccion }
+                    tipo = transaccion.tipo,
+                    expanded = movimientoExpandidoId == transaccion.id,
+                    onExpand = {
+                        movimientoExpandidoId =
+                            if (movimientoExpandidoId == transaccion.id)
+                                null
+                            else
+                                transaccion.id
+                    },
+                    onDelete = {
+                        mostrarConfirmacionEliminar = transaccion
+                    },
+                    onEdit = {
+                        movimientoEditar = transaccion
+                    }
                 )
             }
         }
@@ -147,19 +169,110 @@ fun TransactionsScreen(navHostController: NavController) {
                 onDismiss = {
                     movimientoEditar = null
                 },
-                onGuardar = { descripcion, monto ->
+                onGuardar = { descripcion, monto, categoria ->
 
                     viewModel.updateMovimiento(
                         movimiento.copy(
                             descripcion = descripcion,
-                            monto = monto
+                            monto = monto,
+                            categoriaNombre = categoria
                         )
                     )
 
+                    movimientoExpandidoId = null
                     movimientoEditar = null
+
+                    mensajeExito = "Movimiento actualizado correctamente"
                 }
             )
         }
+        mostrarConfirmacionEliminar?.let { movimiento ->
+
+            AlertDialog(
+                onDismissRequest = {
+                    mostrarConfirmacionEliminar = null
+                },
+                containerColor = Color(0xFFE8F5E9),
+                titleContentColor = Color(0xFF1B5E20),
+                textContentColor = Color(0xFF2E7D32),
+
+                title = {
+                    Text("Eliminar movimiento")
+                },
+
+                text = {
+                    Text("¿Estás seguro de eliminar este movimiento?")
+                },
+
+                confirmButton = {
+
+                    TextButton(
+                        onClick = {
+
+                            viewModel.deleteMovimiento(movimiento.id)
+
+                            mostrarConfirmacionEliminar = null
+
+                            mensajeExito = "Movimiento eliminado correctamente"
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color(0xFF2E7D32)
+
+                        )
+                    ) {
+                        Text("Eliminar")
+                    }
+                },
+
+                dismissButton = {
+
+                    TextButton(
+                        onClick = {
+                            mostrarConfirmacionEliminar = null
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color.Gray
+                        )
+                    ) {
+                        Text("Cancelar")
+                    }
+                }
+            )
+        }
+        mensajeExito?.let { mensaje ->
+
+            AlertDialog(
+                onDismissRequest = {
+                    mensajeExito = null
+                },
+                containerColor = Color(0xFFE8F5E9),
+                titleContentColor = Color(0xFF1B5E20),
+                textContentColor = Color(0xFF2E7D32),
+
+                title = {
+                    Text("Éxito")
+                },
+
+                text = {
+                    Text(mensaje)
+                },
+
+                confirmButton = {
+
+                    TextButton(
+                        onClick = {
+                            mensajeExito = null
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color(0xFF2E7D32)
+                        )
+                    ) {
+                        Text("Aceptar")
+                    }
+                }
+            )
+        }
+
     }
 }
 
@@ -181,13 +294,12 @@ fun TransaccionItem(
     monto: Double,
     descripcion: String,
     tipo: String,
+    expanded: Boolean,
+    onExpand: () -> Unit,
     onDelete: () -> Unit,
     onEdit: () -> Unit
 ) {
 
-    var expanded by remember {
-        mutableStateOf(false)
-    }
 
     val offsetX by animateDpAsState(
         targetValue = if (expanded) (-100).dp else 0.dp,
@@ -243,7 +355,7 @@ fun TransaccionItem(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
                 ) {
-                    expanded = !expanded
+                    onExpand()
                 }
         ) {
 
@@ -461,10 +573,11 @@ fun FechaFiltro(
 }
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun EditMovimientoDialog(
     movimiento: Movimiento,
     onDismiss: () -> Unit,
-    onGuardar: (String, Double) -> Unit
+    onGuardar: (String, Double, String) -> Unit
 ) {
 
     var descripcion by remember {
@@ -475,8 +588,26 @@ fun EditMovimientoDialog(
         mutableStateOf(movimiento.monto.toString())
     }
 
+    val categorias = listOf(
+        "Comida",
+        "Transporte",
+        "Salud",
+        "Entretenimiento"
+    )
+
+    var categoriaSeleccionada by remember {
+        mutableStateOf(movimiento.categoriaNombre)
+    }
+
+    var expandedCategoria by remember {
+        mutableStateOf(false)
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = Color(0xFFE8F5E9),
+        titleContentColor = Color(0xFF1B5E20),
+        textContentColor = Color(0xFF2E7D32),
 
         title = {
             Text("Editar movimiento")
@@ -509,6 +640,55 @@ fun EditMovimientoDialog(
                         Text("Monto")
                     }
                 )
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
+                ExposedDropdownMenuBox(
+                    expanded = expandedCategoria,
+                    onExpandedChange = {
+                        expandedCategoria = !expandedCategoria
+                    }
+                ) {
+
+                    OutlinedTextField(
+                        value = categoriaSeleccionada,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = {
+                            Text("Categoría")
+                        },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = expandedCategoria
+                            )
+                        },
+                        modifier = Modifier.menuAnchor()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expandedCategoria,
+                        onDismissRequest = {
+                            expandedCategoria = false
+                        }
+                    ) {
+
+                        categorias.forEach { categoria ->
+
+                            DropdownMenuItem(
+                                text = {
+                                    Text(categoria)
+                                },
+                                onClick = {
+
+                                    categoriaSeleccionada = categoria
+                                    expandedCategoria = false
+                                }
+                            )
+                        }
+                    }
+                }
             }
         },
 
@@ -516,11 +696,16 @@ fun EditMovimientoDialog(
 
             TextButton(
                 onClick = {
+
                     onGuardar(
                         descripcion,
-                        monto.toDoubleOrNull() ?: 0.0
+                        monto.toDoubleOrNull() ?: 0.0,
+                        categoriaSeleccionada
                     )
-                }
+                },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = Color(0xFF2E7D32)
+                )
             ) {
                 Text("Guardar")
             }
@@ -530,6 +715,9 @@ fun EditMovimientoDialog(
 
             TextButton(
                 onClick = onDismiss
+                ,  colors = ButtonDefaults.textButtonColors(
+                    contentColor = Color.Gray
+                )
             ) {
                 Text("Cancelar")
             }

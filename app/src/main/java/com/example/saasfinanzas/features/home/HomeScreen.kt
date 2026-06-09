@@ -2,6 +2,7 @@ package com.example.saasfinanzas.features.home
 
 import RequestNotificationPermission
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -49,6 +50,9 @@ fun Home(navHostController: NavHostController) {
     val transacciones by viewModelTran.movimientos.collectAsState()
     val metas by viewModelMeta.metas.collectAsState()
 
+    var gastosMesActual = 0.0f
+    var gastosMesPasado = 0.0f
+
     LaunchedEffect(Unit) {
         viewModel.userData()
         viewModelTran.cargarMovimientos()
@@ -78,23 +82,35 @@ fun Home(navHostController: NavHostController) {
 
         // 2. Separar por meses para sacar el porcentaje real
         val calMov = Calendar.getInstance().apply { timeInMillis = mov.fecha }
+
         val mesMov = calMov.get(Calendar.MONTH)
         val anioMov = calMov.get(Calendar.YEAR)
 
         if (anioMov == anioActual && mesMov == mesActual) {
-            if (mov.tipo == "ingreso") balanceActual += monto else balanceActual -= monto
+
+            if (mov.tipo == "ingreso") {
+                balanceActual += monto
+            } else {
+                balanceActual -= monto
+                gastosMesActual += monto
+            }
+
         } else if (anioMov == anioPasado && mesMov == mesPasado) {
-            if (mov.tipo == "ingreso") balancePasado += monto else balancePasado -= monto
+
+            if (mov.tipo == "ingreso") {
+                balancePasado += monto
+            } else {
+                balancePasado -= monto
+                gastosMesPasado += monto
+            }
         }
     }
 
     // MATEMÁTICA DEL PORCENTAJE
-    val diferencia = balanceActual - balancePasado
     val porcentaje = when {
-        balancePasado == 0f && balanceActual > 0f -> 100f
-        balancePasado == 0f && balanceActual < 0f -> -100f
-        balancePasado == 0f -> 0f
-        else -> (diferencia / abs(balancePasado)) * 100f
+        gastosMesPasado == 0f && gastosMesActual > 0f -> 100f
+        gastosMesPasado == 0f -> 0f
+        else -> ((gastosMesActual - gastosMesPasado) / gastosMesPasado) * 100f
     }
 
     val meta = metas.lastOrNull()
@@ -136,6 +152,11 @@ fun Home(navHostController: NavHostController) {
         ) {
 
             item { Header(currentUser?.nombre ?: "") }
+            Log.d("HOME", "Ingresos: $ingresos")
+            Log.d("HOME", "Gastos: $gastos")
+            Log.d("HOME", "BalanceActual: $balanceActual")
+            Log.d("HOME", "BalancePasado: $balancePasado")
+            Log.d("HOME", "Porcentaje: $porcentaje")
 
             item { BalanceSection(ingresos, gastos, porcentaje) }
 
@@ -174,9 +195,9 @@ fun BalanceSection(ingresos: Float, gastos: Float, porcentaje: Float) {
     // LÓGICA DE COLORES Y TEXTO PARA EL PORCENTAJE
     val porcentajeFormateado = "%.1f".format(abs(porcentaje))
     val textoPorcentaje = when {
-        porcentaje > 0 -> "↑ $porcentajeFormateado% este mes"
-        porcentaje < 0 -> "↓ $porcentajeFormateado% este mes"
-        else -> "= Mismo balance que el mes pasado"
+        porcentaje > 0 -> "↑ Gastaste $porcentajeFormateado% más"
+        porcentaje < 0 -> "↓ Gastaste $porcentajeFormateado% menos"
+        else -> "= Mismos gastos que el mes pasado"
     }
 
     val colorTextoPorcentaje = if (porcentaje >= 0) Color(0xFF2D6A4F) else Color.Red

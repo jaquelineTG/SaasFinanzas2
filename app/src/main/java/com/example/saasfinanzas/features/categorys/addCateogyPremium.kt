@@ -61,13 +61,36 @@ fun AddCategory(navController: NavController) {
     // Estados para el Ícono visual
     val availableIcons = listOf(
         "fastfood" to Icons.Default.Fastfood,
+        "restaurant" to Icons.Default.Restaurant,
+        "coffee" to Icons.Default.Coffee,
         "car" to Icons.Default.DirectionsCar,
+        "bus" to Icons.Default.DirectionsBus,
+        "train" to Icons.Default.Train,
+        "flight" to Icons.Default.Flight,
         "movie" to Icons.Default.Movie,
+        "sports" to Icons.Default.SportsSoccer,
+        "fitness" to Icons.Default.FitnessCenter,
         "health" to Icons.Default.Favorite,
+        "medical" to Icons.Default.LocalHospital,
         "home" to Icons.Default.Home,
+        "electricity" to Icons.Default.Bolt,
+        "water" to Icons.Default.WaterDrop,
         "work" to Icons.Default.Work,
         "school" to Icons.Default.School,
-        "shopping" to Icons.Default.ShoppingBag
+        "book" to Icons.Default.MenuBook,
+        "shopping" to Icons.Default.ShoppingBag,
+        "store" to Icons.Default.Store,
+        "gift" to Icons.Default.CardGiftcard,
+        "pets" to Icons.Default.Pets,
+        "childcare" to Icons.Default.ChildCare,
+        "phone" to Icons.Default.PhoneAndroid,
+        "internet" to Icons.Default.Wifi,
+        "bank" to Icons.Default.AccountBalance,
+        "savings" to Icons.Default.Savings,
+        "creditcard" to Icons.Default.CreditCard,
+        "travel" to Icons.Default.Luggage,
+        "music" to Icons.Default.MusicNote,
+        "subscriptions" to Icons.Default.Subscriptions
     )
     // Por defecto no hay ninguno seleccionado, o puedes poner: availableIcons.first().first
     var iconoSeleccionado by remember { mutableStateOf("") }
