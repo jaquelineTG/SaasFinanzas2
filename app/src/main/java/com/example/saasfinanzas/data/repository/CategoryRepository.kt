@@ -11,4 +11,7 @@ class CategoryRepository @Inject constructor(
 ){
     suspend fun addCategory(uid: String,category: Categoria) =
         dataSource.addCategory(uid,category)
+
+    suspend fun getCategory(uid: String) =
+        dataSource.getCategory(uid)
 }

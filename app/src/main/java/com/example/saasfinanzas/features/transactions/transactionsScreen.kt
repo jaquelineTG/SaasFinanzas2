@@ -37,6 +37,8 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import com.example.saasfinanzas.data.model.Categoria
+import com.example.saasfinanzas.features.categorys.CategoryViewModel
 
 //data class Transacciones(
 //    val categoriaNombre: String,
@@ -75,6 +77,15 @@ fun TransactionsScreen(navHostController: NavController) {
     var movimientoExpandidoId by remember {
         mutableStateOf<String?>(null)
     }
+    val viewModelCat: CategoryViewModel = hiltViewModel()
+
+
+    LaunchedEffect(Unit) {
+        viewModelCat.getCategory()
+    }
+    val categoriasdb by viewModelCat.categorias.collectAsState()
+
+    val categorias=categoriasFree+categoriasdb
 
     // 1. Observamos los cambios en el ciclo de vida de la navegación
     val navBackStackEntry by navHostController.currentBackStackEntryAsState()
@@ -183,7 +194,8 @@ fun TransactionsScreen(navHostController: NavController) {
                     movimientoEditar = null
 
                     mensajeExito = "Movimiento actualizado correctamente"
-                }
+                },
+                categorias=categorias
             )
         }
         mostrarConfirmacionEliminar?.let { movimiento ->
@@ -577,8 +589,10 @@ fun FechaFiltro(
 fun EditMovimientoDialog(
     movimiento: Movimiento,
     onDismiss: () -> Unit,
-    onGuardar: (String, Double, String) -> Unit
+    onGuardar: (String, Double, String) -> Unit,
+    categorias:List<Categoria>
 ) {
+
 
     var descripcion by remember {
         mutableStateOf(movimiento.descripcion)
@@ -588,12 +602,11 @@ fun EditMovimientoDialog(
         mutableStateOf(movimiento.monto.toString())
     }
 
-    val categorias = listOf(
-        "Comida",
-        "Transporte",
-        "Salud",
-        "Entretenimiento"
-    )
+
+    var expanded by remember { mutableStateOf(false) }
+    var isPremium: Boolean=true
+
+
 
     var categoriaSeleccionada by remember {
         mutableStateOf(movimiento.categoriaNombre)
@@ -602,6 +615,8 @@ fun EditMovimientoDialog(
     var expandedCategoria by remember {
         mutableStateOf(false)
     }
+
+
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -674,15 +689,16 @@ fun EditMovimientoDialog(
                         }
                     ) {
 
-                        categorias.forEach { categoria ->
+                        var listaCategorias= if (isPremium) categorias else categoriasFree
+                       listaCategorias.forEach { categoria ->
 
                             DropdownMenuItem(
                                 text = {
-                                    Text(categoria)
+                                    Text(categoria.nombre)
                                 },
                                 onClick = {
 
-                                    categoriaSeleccionada = categoria
+                                    categoriaSeleccionada = categoria.nombre
                                     expandedCategoria = false
                                 }
                             )

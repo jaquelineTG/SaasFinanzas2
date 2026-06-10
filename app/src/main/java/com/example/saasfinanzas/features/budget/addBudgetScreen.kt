@@ -39,6 +39,8 @@ import androidx.compose.material3.OutlinedTextField
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,9 +57,11 @@ import androidx.navigation.NavController
 import com.example.saasfinanzas.data.model.Categoria
 import com.example.saasfinanzas.data.model.Movimiento
 import com.example.saasfinanzas.data.model.Presupuesto
+import com.example.saasfinanzas.features.categorys.CategoryViewModel
 import com.example.saasfinanzas.features.components.Alert
 import com.example.saasfinanzas.features.components.PrimaryButton
 import com.example.saasfinanzas.features.transactions.TransactionViewModel
+import com.example.saasfinanzas.features.transactions.categoriasFree
 import com.example.saasfinanzas.ui.theme.SaasFinanzasTheme
 
 import java.time.LocalDate
@@ -73,12 +77,7 @@ import java.util.Calendar
 fun AddBudget(navController: NavController) {
 
 
-    val categoriasFree = listOf(
-        Categoria("1", "Comida"),
-        Categoria("2", "Transporte"),
-        Categoria("3", "Salud"),
-        Categoria("4", "Entretenimiento")
-    )
+
     val viewModel: BudgetViewModel = hiltViewModel()
 
     var expanded by remember { mutableStateOf(false) }
@@ -106,7 +105,21 @@ fun AddBudget(navController: NavController) {
     var expandedAnio by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
     var showDialogCategoria by rememberSaveable { mutableStateOf(false) }
+
     val isPremium = true
+    val viewModelCat: CategoryViewModel = hiltViewModel()
+
+    LaunchedEffect(Unit) {
+        viewModelCat.getCategory()
+    }
+
+    val categoriasdb by viewModelCat.categorias.collectAsState()
+
+    val categorias = categoriasFree + categoriasdb
+
+
+
+
 
     Column(
         modifier = Modifier
@@ -198,7 +211,11 @@ fun AddBudget(navController: NavController) {
                         onDismissRequest = { expanded = false }
                     ) {
 
-                        categoriasFree.forEach {
+                        val listaCategorias =
+                            if (isPremium) categorias
+                            else categoriasFree
+
+                        listaCategorias.forEach {
                             DropdownMenuItem(
                                 text = { Text(it.nombre) },
                                 onClick = {

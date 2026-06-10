@@ -48,7 +48,7 @@ import com.example.saasfinanzas.features.components.PrimaryButton
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCategory(navController: NavController) {
-
+    val greenColor = Color(0xFF2E7D32)
    val viewModel: CategoryViewModel = hiltViewModel()
 
     // Estado para el Nombre
@@ -145,7 +145,13 @@ fun AddCategory(navController: NavController) {
                     onValueChange = { nombre = it },
                     placeholder = { Text("Ej: Supermercado") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp)
+                    shape = RoundedCornerShape(14.dp),
+                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = greenColor,
+                        unfocusedBorderColor = Color.LightGray,
+                        focusedLabelColor = greenColor,
+                        cursorColor = greenColor
+                    )
                 )
             }
         }
@@ -177,10 +183,18 @@ fun AddCategory(navController: NavController) {
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(14.dp))
-                                .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent)
+                                .background(
+                                    if (isSelected)
+                                        greenColor.copy(alpha = 0.12f)
+                                    else
+                                        Color.Transparent
+                                )
                                 .border(
                                     width = 1.dp,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray,
+                                    color = if (isSelected)
+                                        MaterialTheme.colorScheme.primary
+                                    else
+                                        Color.LightGray,
                                     shape = RoundedCornerShape(14.dp)
                                 )
                                 .clickable { tipoSeleccionado = tipo }
@@ -189,7 +203,10 @@ fun AddCategory(navController: NavController) {
                         ) {
                             Text(
                                 text = tipo.replaceFirstChar { it.uppercase() },
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Gray,
+                                color = if (isSelected)
+                                    greenColor
+                                else
+                                    Color.Gray,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -225,14 +242,22 @@ fun AddCategory(navController: NavController) {
                             modifier = Modifier
                                 .size(50.dp)
                                 .clip(CircleShape)
-                                .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent)
+                                .background(
+                                    if (isSelected)
+                                        greenColor.copy(alpha = 0.15f)
+                                    else
+                                        Color.Transparent
+                                )
                                 .clickable { iconoSeleccionado = key },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = iconVector,
                                 contentDescription = key,
-                                tint = if (isSelected) MaterialTheme.colorScheme.primary else Color.Gray,
+                                tint = if (isSelected)
+                                    greenColor
+                                else
+                                    Color.Gray,
                                 modifier = Modifier.size(28.dp)
                             )
                         }
@@ -264,8 +289,6 @@ fun AddCategory(navController: NavController) {
                 navController.popBackStack()
             }
 
-
-            navController.popBackStack()
         }
 
         /* ALERTA DE VALIDACIÓN */

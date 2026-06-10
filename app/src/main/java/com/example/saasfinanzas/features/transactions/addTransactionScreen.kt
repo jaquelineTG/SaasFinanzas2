@@ -28,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.saasfinanzas.data.model.Categoria
 import com.example.saasfinanzas.data.model.Movimiento
+import com.example.saasfinanzas.features.categorys.CategoryViewModel
 import com.example.saasfinanzas.features.components.Alert
 import com.example.saasfinanzas.features.components.PrimaryButton
 import com.google.firebase.auth.FirebaseAuth
@@ -43,6 +44,7 @@ val categoriasFree = listOf(
     Categoria("3", "Salud"),
     Categoria("4", "Entretenimiento")
 )
+var isPremium=true
 @SuppressLint("SuspiciousIndentation")
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,16 +65,24 @@ fun AddTransaccionScreen(
     var showDialogCategoria by rememberSaveable { mutableStateOf(false) }
 
     val viewModel: TransactionViewModel = hiltViewModel()
-
+    val viewModelCat: CategoryViewModel=hiltViewModel()
     LaunchedEffect(Unit) {
         viewModel.cargarMovimientos()
+        viewModelCat.getCategory()
 
     }
+
+
+
+
+    val categoriasdb by viewModelCat.categorias.collectAsState()
+
+    val categorias=categoriasFree+categoriasdb
     val movimientos by viewModel.movimientos.collectAsState()
     val calendar = java.util.Calendar.getInstance()
     val mesActual = calendar.get(java.util.Calendar.MONTH)
     val anioActual = calendar.get(java.util.Calendar.YEAR)
-    val isPremium= true
+
     val movimientosMes=movimientos.filter  { mov->
         calendar.timeInMillis=mov.fecha
         val mesMov = calendar.get(java.util.Calendar.MONTH)
@@ -82,6 +92,7 @@ fun AddTransaccionScreen(
 
 
     }
+
 
 
 
@@ -249,7 +260,9 @@ fun AddTransaccionScreen(
                         onCategoriaSelected = { id, nombre ->
                             categoriaId = id
                             categoriaNombre = nombre
-                        }
+                        },
+                        categorias=categorias
+
                     )
                 }
             }
@@ -377,9 +390,9 @@ fun AddTransaccionScreen(
 @Composable
 fun SelectorCategoria(
     categoria: String,
-    onCategoriaSelected: (String,String) -> Unit
+    onCategoriaSelected: (String,String) -> Unit,
+    categorias: List<Categoria>,
 ) {
-
 
 
     var expanded by remember { mutableStateOf(false) }
@@ -407,11 +420,15 @@ fun SelectorCategoria(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            categoriasFree.forEach {
+            val listaMostrar =
+                if (isPremium) categorias
+                else categoriasFree
+
+            listaMostrar.forEach {
                 DropdownMenuItem(
                     text = { Text(it.nombre) },
                     onClick = {
-                        onCategoriaSelected(it.id,it.nombre)
+                        onCategoriaSelected(it.id, it.nombre)
                         expanded = false
                     }
                 )

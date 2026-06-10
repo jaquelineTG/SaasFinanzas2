@@ -28,4 +28,27 @@ class CategoryDataSource @Inject constructor() {
             Result.failure(e)
         }
     }
+
+    suspend fun getCategory(uid: String): Result<List<Categoria>> {
+        return try {
+
+            val docRef = firestore.collection("usuarios")
+                .document(uid)
+                .collection("categorias")
+                .get()
+                .await()
+
+            val lista = docRef.documents.mapNotNull { doc ->
+                doc.toObject(Categoria::class.java)?.copy(id = doc.id)
+            }
+
+            Result.success(lista)
+
+
+
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
