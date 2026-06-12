@@ -2,6 +2,7 @@ package com.example.saasfinanzas.features.goals
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,7 +25,9 @@ import com.example.saasfinanzas.data.model.Aporte
 import com.example.saasfinanzas.data.model.Meta
 import com.example.saasfinanzas.features.components.Alert
 import com.example.saasfinanzas.features.components.PrimaryButton
-import kotlin.text.toLong
+
+// 🔹 Tu verde oscuro oficial
+private val greenColor = Color(0xFF2E7D32)
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,151 +46,167 @@ fun AddAporte(navController: NavHostController, metaId: String?) {
 
     var monto by remember { mutableStateOf("") }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF3F4F6))
-            .padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    // 🔹 Envolvemos todo en el MaterialTheme para matar el morado base del sistema
+    MaterialTheme(
+        colorScheme = MaterialTheme.colorScheme.copy(
+            primary = greenColor,
+            primaryContainer = greenColor.copy(alpha = 0.1f),
+            onPrimaryContainer = greenColor
+        )
     ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF3F4F6))
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
 
-        item { Spacer(modifier = Modifier.height(20.dp)) }
+            item { Spacer(modifier = Modifier.height(20.dp)) }
 
-        /* 🔹 HEADER */
-        item {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-
-                IconButton(
-                    onClick = { navController.popBackStack() },
-                    modifier = Modifier.align(Alignment.CenterStart)
-                ) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "")
-                }
-
-                Text(
-                    "Agregar Aporte",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-        }
-
-        item { Spacer(modifier = Modifier.height(24.dp)) }
-
-        /* 🔹 MONTO */
-        item {
-            CardField("MONTO A APORTAR") {
-
-                OutlinedTextField(
-                    value = monto,
-                    onValueChange = {
-                        if (it.matches(Regex("^\\d*\\.?\\d*\$"))) {
-                            monto = it
-                        }
-                    },
-                    leadingIcon = { Text("$") },
-                    placeholder = { Text("0.00") },
+            /* 🔹 HEADER */
+            item {
+                Box(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-            }
-        }
-
-        item { Spacer(modifier = Modifier.height(20.dp)) }
-
-        /* 🔹 BOTONES RÁPIDOS */
-        item {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-
-                QuickAddButton("+50") {
-                    monto = ((monto.toDoubleOrNull() ?: 0.0) + 50).toString()
-                }
-
-                QuickAddButton("+100") {
-                    monto = ((monto.toDoubleOrNull() ?: 0.0) + 100).toString()
-                }
-
-                QuickAddButton("+200") {
-                    monto = ((monto.toDoubleOrNull() ?: 0.0) + 200).toString()
-                }
-            }
-        }
-
-        item { Spacer(modifier = Modifier.height(20.dp)) }
-
-        /* 🔹 INFO META */
-        item {
-            ElevatedCard(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    contentAlignment = Alignment.Center
                 ) {
 
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(
-                                Color(0xFFD1FAE5),
-                                RoundedCornerShape(10.dp)
-                            )
+                    IconButton(
+                        onClick = { navController.popBackStack() },
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    ) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "")
+                    }
+
+                    Text(
+                        "Agregar Aporte",
+                        style = MaterialTheme.typography.titleMedium
                     )
+                }
+            }
 
-                    Spacer(modifier = Modifier.width(12.dp))
+            item { Spacer(modifier = Modifier.height(24.dp)) }
 
-                    Column {
+            /* 🔹 MONTO */
+            item {
+                CardField("MONTO A APORTAR") {
 
-                        Text(
-                            text = "Este aporte se sumará a:",
-                            color = Color.Gray
+                    OutlinedTextField(
+                        value = monto,
+                        onValueChange = {
+                            if (it.matches(Regex("^\\d*\\.?\\d*\$"))) {
+                                monto = it
+                            }
+                        },
+                        leadingIcon = { Text("$") },
+                        placeholder = { Text("0.00") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        // 🔹 Exterminamos el morado del input
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = greenColor,
+                            focusedLabelColor = greenColor,
+                            cursorColor = greenColor,
+                            focusedLeadingIconColor = greenColor
                         )
+                    )
+                }
+            }
 
-                        Text(
-                            text = meta?.nombre ?: "",
-                            fontWeight = FontWeight.Bold
-                        )
+            item { Spacer(modifier = Modifier.height(20.dp)) }
+
+            /* 🔹 BOTONES RÁPIDOS */
+            item {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+
+                    QuickAddButton("+50") {
+                        monto = ((monto.toDoubleOrNull() ?: 0.0) + 50).toString()
+                    }
+
+                    QuickAddButton("+100") {
+                        monto = ((monto.toDoubleOrNull() ?: 0.0) + 100).toString()
+                    }
+
+                    QuickAddButton("+200") {
+                        monto = ((monto.toDoubleOrNull() ?: 0.0) + 200).toString()
                     }
                 }
             }
-        }
 
-        item { Spacer(modifier = Modifier.height(40.dp)) }
+            item { Spacer(modifier = Modifier.height(20.dp)) }
 
-        /* 🔹 BOTÓN */
-        item {
-            PrimaryButton("Guardar Aporte") {
+            /* 🔹 INFO META */
+            item {
+                ElevatedCard(
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
 
-                if (monto.isBlank()) {
-                    println("Faltan datos")
-                    return@PrimaryButton
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(
+                                    Color(0xFFD1FAE5),
+                                    RoundedCornerShape(10.dp)
+                                )
+                        )
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column {
+
+                            Text(
+                                text = "Este aporte se sumará a:",
+                                color = Color.Gray
+                            )
+
+                            Text(
+                                text = meta?.nombre ?: "",
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
-
-                val aporte = Aporte(
-                    id = "",
-                    metaId = metaId.toString(),
-                    monto = monto.toDoubleOrNull() ?: 0.0,
-                    fecha = System.currentTimeMillis()
-                )
-
-                viewModelAporte.addAporte(aporte)
-
-                navController.popBackStack()
             }
 
-            //Alert()
-        }
+            item { Spacer(modifier = Modifier.height(40.dp)) }
 
-        item { Spacer(modifier = Modifier.height(30.dp)) }
+            /* 🔹 BOTÓN */
+            item {
+                PrimaryButton("Guardar Aporte") {
+
+                    if (monto.isBlank()) {
+                        println("Faltan datos")
+                        return@PrimaryButton
+                    }
+
+                    val aporte = Aporte(
+                        id = "",
+                        metaId = metaId.toString(),
+                        monto = monto.toDoubleOrNull() ?: 0.0,
+                        fecha = System.currentTimeMillis()
+                    )
+
+                    viewModelAporte.addAporte(aporte)
+
+                    navController.popBackStack()
+                }
+
+                //Alert()
+            }
+
+            item { Spacer(modifier = Modifier.height(30.dp)) }
+        }
     }
 }
 
@@ -196,7 +215,11 @@ fun QuickAddButton(text: String, onClick: () -> Unit) {
 
     OutlinedButton(
         onClick = onClick,
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, greenColor), // 🔹 Borde verde
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = greenColor // 🔹 Texto y efecto click verde
+        )
     ) {
         Text(
             text = text,

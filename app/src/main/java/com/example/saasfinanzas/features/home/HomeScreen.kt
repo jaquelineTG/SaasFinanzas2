@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.saasfinanzas.data.model.Meta
@@ -33,6 +34,10 @@ import com.example.saasfinanzas.features.goals.GoalViewModel
 import com.example.saasfinanzas.features.transactions.TransactionViewModel
 import java.util.Calendar
 import kotlin.math.abs
+
+// 🔹 Tu verde oscuro oficial
+private val greenColor = Color(0xFF2E7D32)
+private val redColor = Color(0xFFD32F2F)
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,16 +92,13 @@ fun Home(navHostController: NavHostController) {
         val anioMov = calMov.get(Calendar.YEAR)
 
         if (anioMov == anioActual && mesMov == mesActual) {
-
             if (mov.tipo == "ingreso") {
                 balanceActual += monto
             } else {
                 balanceActual -= monto
                 gastosMesActual += monto
             }
-
         } else if (anioMov == anioPasado && mesMov == mesPasado) {
-
             if (mov.tipo == "ingreso") {
                 balancePasado += monto
             } else {
@@ -116,60 +118,72 @@ fun Home(navHostController: NavHostController) {
     val meta = metas.lastOrNull()
     val ultimos = transacciones
         .filter { mov ->
-            val calMov = Calendar.getInstance() //es la fecha actual
-            calMov.timeInMillis = mov.fecha// . timeinmillis es el mismo formato de la mov.fecha long asi 1780610400000L
+            val calMov = Calendar.getInstance()
+            calMov.timeInMillis = mov.fecha
 
             calMov.get(Calendar.MONTH) == mesActual &&
-            calMov.get(Calendar.YEAR) == anioActual
+                    calMov.get(Calendar.YEAR) == anioActual
         }
         .takeLast(3)
-        .reversed() // reversed para que el más nuevo salga primero
+        .reversed()
 
-    Scaffold(
-        containerColor = Color(0xFFF3F4F6),
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Inicio", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF3F4F6),
-                    scrolledContainerColor = Color(0xFFF3F4F6)
+    MaterialTheme(
+        colorScheme = MaterialTheme.colorScheme.copy(
+            primary = greenColor,
+            primaryContainer = greenColor.copy(alpha = 0.1f),
+            onPrimaryContainer = greenColor
+        )
+    ) {
+        Scaffold(
+            containerColor = Color(0xFFF3F4F6),
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text("Inicio", fontWeight = FontWeight.Bold, color = Color.Black) },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color(0xFFF3F4F6),
+                        scrolledContainerColor = Color(0xFFF3F4F6)
+                    )
                 )
-            )
-        }
-    ) { paddingValues ->
-
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFF5F5F5)),
-            contentPadding = PaddingValues(
-                top = paddingValues.calculateTopPadding() + 16.dp,
-                bottom = paddingValues.calculateBottomPadding() + 16.dp,
-                start = 16.dp,
-                end = 16.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-
-            item { Header(currentUser?.nombre ?: "") }
-            Log.d("HOME", "Ingresos: $ingresos")
-            Log.d("HOME", "Gastos: $gastos")
-            Log.d("HOME", "BalanceActual: $balanceActual")
-            Log.d("HOME", "BalancePasado: $balancePasado")
-            Log.d("HOME", "Porcentaje: $porcentaje")
-
-            item { BalanceSection(ingresos, gastos, porcentaje) }
-
-            item { IncomeExpense(ingresos, gastos) }
-
-            meta?.let {
-                item { GoalCard(it) }
             }
+        ) { paddingValues ->
 
-            item { RecentTitle() }
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
 
-            items(ultimos) { movimiento ->
-                MovementItem(movimiento)
+                item { Header(currentUser?.nombre ?: "Usuario") }
+
+                item { BalanceSection(ingresos, gastos, porcentaje) }
+
+                item { IncomeExpense(ingresos, gastos) }
+
+                meta?.let {
+                    item { GoalCard(it) }
+                }
+
+                item { RecentTitle() }
+
+                if (ultimos.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No hay movimientos recientes",
+                            color = Color.Gray,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                        )
+                    }
+                } else {
+                    items(ultimos) { movimiento ->
+                        MovementItem(movimiento)
+                    }
+                }
+
+                item { Spacer(modifier = Modifier.height(20.dp)) }
             }
         }
     }
@@ -183,7 +197,8 @@ fun Header(nombre: String) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Column {
-            Text("Hola, $nombre", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+            Text("Hola, $nombre 👋", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall, color = Color.Black)
+            Text("Este es tu resumen financiero", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
@@ -192,29 +207,32 @@ fun Header(nombre: String) {
 fun BalanceSection(ingresos: Float, gastos: Float, porcentaje: Float) {
     val balanceTotal = ingresos - gastos
 
-    // LÓGICA DE COLORES Y TEXTO PARA EL PORCENTAJE
+    // LÓGICA DE COLORES Y TEXTO PARA EL PORCENTAJE (Corregida)
     val porcentajeFormateado = "%.1f".format(abs(porcentaje))
+
+    // Si gastaste más, es malo (rojo). Si gastaste menos, es bueno (verde).
     val textoPorcentaje = when {
         porcentaje > 0 -> "↑ Gastaste $porcentajeFormateado% más"
         porcentaje < 0 -> "↓ Gastaste $porcentajeFormateado% menos"
         else -> "= Mismos gastos que el mes pasado"
     }
 
-    val colorTextoPorcentaje = if (porcentaje >= 0) Color(0xFF2D6A4F) else Color.Red
-    val bgPorcentaje = if (porcentaje >= 0) Color(0xFFD8F3DC) else Color(0xFFFFEBEB)
+    val colorTextoPorcentaje = if (porcentaje <= 0) greenColor else redColor
+    val bgPorcentaje = if (porcentaje <= 0) Color(0xFFE8F5E9) else Color(0xFFFFEBEB)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text("Balance Total", color = Color.Gray)
+        Text("Balance Total", color = Color.Gray, style = MaterialTheme.typography.titleMedium)
         Text(
-            "$${balanceTotal}",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
+            "$${String.format("%.2f", balanceTotal)}",
+            style = MaterialTheme.typography.displayMedium,
+            fontWeight = FontWeight.ExtraBold,
+            color = Color.Black
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Surface(
             shape = RoundedCornerShape(50),
@@ -222,9 +240,10 @@ fun BalanceSection(ingresos: Float, gastos: Float, porcentaje: Float) {
         ) {
             Text(
                 text = textoPorcentaje,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                 color = colorTextoPorcentaje,
-                style = MaterialTheme.typography.labelMedium
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
@@ -235,15 +254,17 @@ fun IncomeExpense(ingresos: Float, gastos: Float) {
     BoxWithConstraints(
         modifier = Modifier.fillMaxWidth()
     ) {
-        val cardWidth = (maxWidth - 12.dp) / 2
+        val cardWidth = (maxWidth - 16.dp) / 2
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
         ) {
             val total = ingresos + gastos
             val progressIngresos = if (total > 0) ingresos / total else 0f
             val progressGastos = if (total > 0) gastos / total else 0f
-            CardInfo("INGRESOS", "$${ingresos}", true, cardWidth, progressIngresos)
-            CardInfo("GASTOS", "$${gastos}", false, cardWidth, progressGastos)
+
+            CardInfo("INGRESOS", "$${String.format("%.2f", ingresos)}", true, cardWidth, progressIngresos)
+            CardInfo("GASTOS", "$${String.format("%.2f", gastos)}", false, cardWidth, progressGastos)
         }
     }
 }
@@ -258,20 +279,43 @@ fun CardInfo(
 ) {
     ElevatedCard(
         modifier = Modifier.width(width),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = Color.White),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(title, color = Color.Gray, style = MaterialTheme.typography.labelSmall)
-            Text(amount, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .background(if (isIncome) Color(0xFFE8F5E9) else Color(0xFFFFEBEB), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (isIncome) Icons.Default.TrendingUp else Icons.Default.TrendingDown,
+                        contentDescription = null,
+                        tint = if (isIncome) greenColor else redColor,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(title, color = Color.Gray, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(amount, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = Color.Black)
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             LinearProgressIndicator(
                 progress = { progreso },
-                color = if (isIncome) Color(0xFF22C55E) else Color.Red,
-                trackColor = Color.LightGray.copy(alpha = 0.5f),
-                modifier = Modifier.fillMaxWidth()
+                color = if (isIncome) greenColor else redColor,
+                trackColor = Color(0xFFF3F4F6),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(50))
             )
         }
     }
@@ -279,38 +323,60 @@ fun CardInfo(
 
 @Composable
 fun GoalCard(meta: Meta) {
-    val progress = (meta.montoAhorrado.toFloat() / meta.montoObjetivo.toFloat())
-        .coerceIn(0f, 1f)
-    Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1B4332)),
-        shape = RoundedCornerShape(24.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+    val progress = if (meta.montoObjetivo > 0) {
+        (meta.montoAhorrado.toFloat() / meta.montoObjetivo.toFloat()).coerceIn(0f, 1f)
+    } else 0f
 
-            Text("Meta de Ahorro", color = Color.White.copy(0.7f), style = MaterialTheme.typography.labelMedium)
+    Card(
+        colors = CardDefaults.cardColors(containerColor = greenColor),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(24.dp)) {
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.EmojiEvents, contentDescription = "Meta", tint = Color(0xFFFFD700), modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("META DE AHORRO ACTIVA", color = Color.White.copy(0.8f), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             Text(
                 meta.nombre,
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleLarge
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             LinearProgressIndicator(
                 progress = { progress },
                 color = Color.White,
-                trackColor = Color.White.copy(0.3f),
-                modifier = Modifier.fillMaxWidth()
+                trackColor = Color.White.copy(0.2f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(50))
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            Text(
-                "$${meta.montoAhorrado} / $${meta.montoObjetivo} acumulado",
-                color = Color.White.copy(0.7f),
-                style = MaterialTheme.typography.bodySmall
-            )
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(
+                    "$${meta.montoAhorrado} acumulado",
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    "de $${meta.montoObjetivo}",
+                    color = Color.White.copy(0.7f),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
         }
     }
 }
@@ -322,15 +388,18 @@ fun RecentTitle() {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("Movimientos recientes", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+        Text("Movimientos recientes", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = Color.Black)
     }
 }
 
 @Composable
 fun MovementItem(movimiento: Movimiento) {
+    val isExpense = movimiento.tipo == "gasto"
+
     ElevatedCard(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = Color.White),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -338,30 +407,34 @@ fun MovementItem(movimiento: Movimiento) {
                 .fillMaxWidth()
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
-
         ) {
             Box(
                 modifier = Modifier
-                    .size(44.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFEAF2EC)),
+                    .background(if (isExpense) Color(0xFFFFEBEB) else Color(0xFFE8F5E9)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.ShoppingCart, contentDescription = "", tint = Color(0xFF1B3D2F))
+                Icon(
+                    imageVector = if (isExpense) Icons.Default.ShoppingCart else Icons.Default.AttachMoney,
+                    contentDescription = "",
+                    tint = if (isExpense) redColor else greenColor
+                )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(movimiento.descripcion, fontWeight = FontWeight.Bold)
+                Text(movimiento.descripcion, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = Color.Black)
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(movimiento.categoriaNombre, color = Color.Gray, style = MaterialTheme.typography.bodySmall)
             }
 
-
             Text(
-                text = if (movimiento.tipo == "gasto") "-$${movimiento.monto}" else "+$${movimiento.monto}",
-                color = if (movimiento.tipo == "gasto") Color.Red else Color.Blue,
-                fontWeight = FontWeight.Bold
+                text = if (isExpense) "-$${movimiento.monto}" else "+$${movimiento.monto}",
+                color = if (isExpense) redColor else greenColor,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
             )
         }
     }

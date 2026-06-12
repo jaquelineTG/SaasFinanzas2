@@ -13,8 +13,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -31,12 +29,8 @@ import com.example.saasfinanzas.data.model.Movimiento
 import com.example.saasfinanzas.features.categorys.CategoryViewModel
 import com.example.saasfinanzas.features.components.Alert
 import com.example.saasfinanzas.features.components.PrimaryButton
-import com.google.firebase.auth.FirebaseAuth
 import java.time.Instant
 import java.time.ZoneId
-
-
-
 
 val categoriasFree = listOf(
     Categoria("1", "Comida"),
@@ -44,7 +38,11 @@ val categoriasFree = listOf(
     Categoria("3", "Salud"),
     Categoria("4", "Entretenimiento")
 )
-var isPremium=true
+var isPremium = true
+
+// 🔹 Tu verde oscuro oficial (privado para no chocar con otros archivos)
+ val greenColor = Color(0xFF2E7D32)
+
 @SuppressLint("SuspiciousIndentation")
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,7 +50,6 @@ var isPremium=true
 fun AddTransaccionScreen(
     navController: NavController
 ) {
-
     var monto by rememberSaveable { mutableStateOf("") }
     var descripcion by rememberSaveable { mutableStateOf("") }
     var categoriaId by rememberSaveable { mutableStateOf("") }
@@ -65,343 +62,299 @@ fun AddTransaccionScreen(
     var showDialogCategoria by rememberSaveable { mutableStateOf(false) }
 
     val viewModel: TransactionViewModel = hiltViewModel()
-    val viewModelCat: CategoryViewModel=hiltViewModel()
+    val viewModelCat: CategoryViewModel = hiltViewModel()
+
     LaunchedEffect(Unit) {
         viewModel.cargarMovimientos()
         viewModelCat.getCategory()
-
     }
 
-
-
-
     val categoriasdb by viewModelCat.categorias.collectAsState()
-
-    val categorias=categoriasFree+categoriasdb
+    val categorias = categoriasFree + categoriasdb
     val movimientos by viewModel.movimientos.collectAsState()
     val calendar = java.util.Calendar.getInstance()
     val mesActual = calendar.get(java.util.Calendar.MONTH)
     val anioActual = calendar.get(java.util.Calendar.YEAR)
 
-    val movimientosMes=movimientos.filter  { mov->
-        calendar.timeInMillis=mov.fecha
+    val movimientosMes = movimientos.filter { mov ->
+        calendar.timeInMillis = mov.fecha
         val mesMov = calendar.get(java.util.Calendar.MONTH)
         val anioMov = calendar.get(java.util.Calendar.YEAR)
-
         mesMov == mesActual && anioMov == anioActual
-
-
     }
 
-
-
-
-
-
-
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF3F4F6))
-            .padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    // 🔹 Forzamos a que todo lo que esté aquí dentro use el verde como color primario
+    MaterialTheme(
+        colorScheme = MaterialTheme.colorScheme.copy(
+            primary = greenColor,
+            primaryContainer = greenColor.copy(alpha = 0.1f),
+            onPrimaryContainer = greenColor
+        )
     ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF3F4F6))
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            item { Spacer(modifier = Modifier.height(20.dp)) }
 
-        item { Spacer(modifier = Modifier.height(20.dp)) }
-
-        /* 🔹 HEADER */
-        item {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-
-                IconButton(
-                    onClick = { navController.popBackStack() },
-                    modifier = Modifier.align(Alignment.CenterStart)
+            /* 🔹 HEADER */
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "")
-                }
-
-                Text(
-                    "Agregar Movimiento",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-        }
-
-        item { Spacer(modifier = Modifier.height(24.dp)) }
-
-        /* 🔹 TIPO */
-        item {
-            ElevatedCard(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(6.dp)
-                        .background(Color(0xFFF1F5F9), RoundedCornerShape(16.dp))
-                ) {
-
-                    ToggleButton(
-                        text = "Ingreso",
-                        selected = !isExpense,
-                        onClick = { isExpense = false }
-                    )
-
-                    ToggleButton(
-                        text = "Gasto",
-                        selected = isExpense,
-                        onClick = { isExpense = true }
-                    )
-                }
-            }
-        }
-
-        item { Spacer(modifier = Modifier.height(20.dp)) }
-
-        /* 🔹 MONTO */
-        item {
-            ElevatedCard(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-
-                Column(Modifier.padding(16.dp)) {
-
-                    Text("MONTO", color = Color.Gray)
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    OutlinedTextField(
-                        value = monto,
-                        onValueChange = {
-                            if (it.matches(Regex("^\\d*\\.?\\d*\$"))) {
-                                monto = it
-                            }
-                        },
-                        leadingIcon = { Text("$") },
-                        placeholder = { Text("0.00") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
-                }
-            }
-        }
-
-        item { Spacer(modifier = Modifier.height(20.dp)) }
-
-        /* DESCRIPCIÓN */
-        item {
-            ElevatedCard(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-
-                Column(Modifier.padding(16.dp)) {
-
-                    Text("DESCRIPCIÓN", color = Color.Gray)
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    OutlinedTextField(
-                        value = descripcion,
-                        onValueChange = { descripcion = it },
-                        placeholder = { Text("Ej. Pago de renta") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp)
-                    )
-                }
-            }
-        }
-
-        item { Spacer(modifier = Modifier.height(20.dp)) }
-
-        /* 🔹 CATEGORÍA */
-        item {
-            ElevatedCard(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-
-                Column(Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    IconButton(
+                        onClick = { navController.popBackStack() },
+                        modifier = Modifier.align(Alignment.CenterStart)
                     ) {
-                        Text("CATEGORÍA", color = Color.Gray)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "")
+                    }
+                    Text(
+                        "Agregar Movimiento",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            }
 
-                        IconButton(onClick = {
-                            if(isPremium){
-                                navController.navigate("categorias")
+            item { Spacer(modifier = Modifier.height(24.dp)) }
 
-                            }else{
-                                showDialogCategoria = true
+            /* 🔹 TIPO */
+            item {
+                ElevatedCard(
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(6.dp)
+                            .background(Color(0xFFF1F5F9), RoundedCornerShape(16.dp))
+                    ) {
+                        ToggleButton(
+                            text = "Ingreso",
+                            selected = !isExpense,
+                            onClick = { isExpense = false }
+                        )
+                        ToggleButton(
+                            text = "Gasto",
+                            selected = isExpense,
+                            onClick = { isExpense = true }
+                        )
+                    }
+                }
+            }
+
+            item { Spacer(modifier = Modifier.height(20.dp)) }
+
+            /* 🔹 MONTO */
+            item {
+                ElevatedCard(
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Text("MONTO", color = Color.Gray)
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        OutlinedTextField(
+                            value = monto,
+                            onValueChange = {
+                                if (it.matches(Regex("^\\d*\\.?\\d*\$"))) {
+                                    monto = it
+                                }
+                            },
+                            leadingIcon = { Text("$") },
+                            placeholder = { Text("0.00") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = greenColor,
+                                focusedLabelColor = greenColor,
+                                cursorColor = greenColor,
+                                focusedLeadingIconColor = greenColor
+                            )
+                        )
+                    }
+                }
+            }
+
+            item { Spacer(modifier = Modifier.height(20.dp)) }
+
+            /* DESCRIPCIÓN */
+            item {
+                ElevatedCard(
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Text("DESCRIPCIÓN", color = Color.Gray)
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        OutlinedTextField(
+                            value = descripcion,
+                            onValueChange = { descripcion = it },
+                            placeholder = { Text("Ej. Pago de renta") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = greenColor,
+                                focusedLabelColor = greenColor,
+                                cursorColor = greenColor
+                            )
+                        )
+                    }
+                }
+            }
+
+            item { Spacer(modifier = Modifier.height(20.dp)) }
+
+            /* 🔹 CATEGORÍA */
+            item {
+                ElevatedCard(
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("CATEGORÍA", color = Color.Gray)
+
+                            IconButton(onClick = {
+                                if (isPremium) {
+                                    navController.navigate("categorias")
+                                } else {
+                                    showDialogCategoria = true
+                                }
+                            }) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = "Agregar",
+                                    tint = greenColor
+                                )
                             }
-                        }) {
-                            Icon(Icons.Default.Add, contentDescription = "Agregar")
                         }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        SelectorCategoria(
+                            categoria = categoriaNombre,
+                            onCategoriaSelected = { id, nombre ->
+                                categoriaId = id
+                                categoriaNombre = nombre
+                            },
+                            categorias = categorias
+                        )
+                    }
+                }
+            }
+
+            item { Spacer(modifier = Modifier.height(20.dp)) }
+
+            /* 🔹 FECHA */
+            item {
+                ElevatedCard(
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Text("FECHA", color = Color.Gray)
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        SelectorFecha(
+                            fecha = fecha,
+                            onFechaSelected = { fecha = it }
+                        )
+                    }
+                }
+            }
+
+            item { Spacer(modifier = Modifier.height(30.dp)) }
+
+            /* 🔹 BOTÓN */
+            item {
+                PrimaryButton("Guardar Movimiento") {
+                    val montoDouble = monto.toDoubleOrNull() ?: 0.0
+
+                    if (monto.isBlank() || descripcion.isBlank() || categoriaNombre.isBlank() || fecha == 0L) {
+                        showDialog = true
+                        return@PrimaryButton
                     }
 
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    SelectorCategoria(
-                        categoria = categoriaNombre,
-                        onCategoriaSelected = { id, nombre ->
-                            categoriaId = id
-                            categoriaNombre = nombre
-                        },
-                        categorias=categorias
-
+                    val movimiento = Movimiento(
+                        id = "",
+                        categoriaId = categoriaId,
+                        categoriaNombre = categoriaNombre,
+                        tipo = if (isExpense) "gasto" else "ingreso",
+                        monto = montoDouble,
+                        descripcion = descripcion,
+                        fecha = fecha
                     )
-                }
-            }
-        }
-
-        item { Spacer(modifier = Modifier.height(20.dp)) }
-
-        /* 🔹 FECHA */
-        item {
-            ElevatedCard(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-
-                Column(Modifier.padding(16.dp)) {
-
-                    Text("FECHA", color = Color.Gray)
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    SelectorFecha(
-                        fecha = fecha,
-                        onFechaSelected = { fecha = it }
-                    )
-                }
-            }
-        }
-
-        item { Spacer(modifier = Modifier.height(30.dp)) }
-
-        /* 🔹 BOTÓN */
-        item {
-            PrimaryButton("Guardar Movimiento") {
-
-                val montoDouble = monto.toDoubleOrNull() ?: 0.0
-
-                if (
-                    monto.isBlank() ||
-                    descripcion.isBlank() ||
-                    categoriaNombre.isBlank() ||
-                    fecha == 0L
-                ) {
-
-
-                   showDialog=true
-                    return@PrimaryButton
+                    viewModel.addMovimiento(movimiento) {
+                        navController.popBackStack()
+                    }
                 }
 
-
-//                if(movimientosMes.size==45){
-//                    showDialogRestantes=true
-//                }
-//                if (movimientosMes.size + 1 > 50) {
-//                    showDialogLimite = true
-//
-//                    return@PrimaryButton
-//                }
-
-                val movimiento = Movimiento(
-                    id = "",
-                    categoriaId = categoriaId,
-                    categoriaNombre = categoriaNombre,
-                    tipo = if (isExpense) "gasto" else "ingreso",
-                    monto = montoDouble,
-                    descripcion = descripcion,
-                    fecha = fecha
+                Alert(
+                    text = "Agrega todos los datos del formulario",
+                    title = "Datos incompletos",
+                    showDialog = showDialog,
+                    onDismiss = { showDialog = false }
                 )
-                viewModel.addMovimiento(movimiento) {
-                    navController.popBackStack()
-                }
 
+                Alert(
+                    title = "Límite alcanzado 🔒",
+                    text = "Ya usaste tus 50 movimientos del mes.\nDesbloquea movimientos ilimitados con Premium 💎",
+                    showDialog = showDialogLimite,
+                    onDismiss = { showDialogLimite = false; navController.navigate("premium") }
+                )
 
+                Alert(
+                    title = "Límite alcanzado 🔒",
+                    text = "Te quedan 5 movimientos en el plan gratis",
+                    showDialog = showDialogRestantes,
+                    onDismiss = { showDialogRestantes = false }
+                )
+
+                Alert(
+                    title = "Desbloquea categorías personalizadas",
+                    text = "Crea tus propias categorías como \"Café\", \"Gym\" o \"Salidas\" y organiza tus finanzas a tu manera.\n\nDisponible solo en Premium.",
+                    showDialog = showDialogCategoria,
+                    onDismiss = {
+                        showDialogCategoria = false
+                        navController.navigate("premium")
+                    }
+                )
             }
-            Alert(
-                text = "Agrega todos los datos del formulario",
-                title = "Datos incompletos",
-                showDialog = showDialog,
-                onDismiss = { showDialog = false }
-            )
-
-            Alert(
-                title = "Límite alcanzado 🔒",
-                text = "Ya usaste tus 50 movimientos del mes.\nDesbloquea movimientos ilimitados con Premium 💎",
-                showDialog = showDialogLimite,
-                onDismiss = { showDialogLimite = false; navController.navigate("premium") }
-            )
-
-
-
-
-            Alert(
-                title = "Límite alcanzado 🔒",
-                text = "Te quedan 5 movimientos en el plan gratis",
-                showDialog = showDialogRestantes,
-                onDismiss = { showDialogRestantes = false }
-            )
-            Alert(
-                title = "Crea tu Propias Categorias",
-                text = "Ya usaste tus 50 movimientos del mes.\nDesbloquea movimientos ilimitados con Premium 💎",
-                showDialog = showDialogCategoria,
-                onDismiss = { showDialogCategoria = false; navController.navigate("premium") }
-            )
-
-            Alert(
-                title = "Desbloquea categorías personalizadas",
-                text = "Crea tus propias categorías como \"Café\", \"Gym\" o \"Salidas\" y organiza tus finanzas a tu manera.\n\nDisponible solo en Premium.",
-                showDialog = showDialogCategoria,
-                onDismiss = {
-                    showDialogCategoria = false
-                    navController.navigate("premium")
-                }
-            )
-
-
+            item { Spacer(modifier = Modifier.height(30.dp)) }
         }
-
-        item { Spacer(modifier = Modifier.height(30.dp)) }
     }
 }
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectorCategoria(
     categoria: String,
-    onCategoriaSelected: (String,String) -> Unit,
+    onCategoriaSelected: (String, String) -> Unit,
     categorias: List<Categoria>,
 ) {
-
-
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded }
     ) {
-
         OutlinedTextField(
             value = categoria,
             onValueChange = {},
@@ -413,16 +366,21 @@ fun SelectorCategoria(
             },
             modifier = Modifier
                 .menuAnchor()
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = greenColor,
+                focusedLabelColor = greenColor,
+                cursorColor = greenColor,
+                focusedTrailingIconColor = greenColor
+            )
         )
 
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(Color.White) // 🔹 Hacemos el fondo del menú completamente blanco
         ) {
-            val listaMostrar =
-                if (isPremium) categorias
-                else categoriasFree
+            val listaMostrar = if (isPremium) categorias else categoriasFree
 
             listaMostrar.forEach {
                 DropdownMenuItem(
@@ -444,12 +402,9 @@ fun SelectorFecha(
     fecha: Long,
     onFechaSelected: (Long) -> Unit
 ) {
-
     var showDialog by remember { mutableStateOf(false) }
-
     val datePickerState = rememberDatePickerState()
 
-    // Convertir millis a texto bonito
     val fechaTexto = fecha.takeIf { it != 0L }?.let {
         Instant.ofEpochMilli(it)
             .atZone(ZoneId.systemDefault())
@@ -458,58 +413,77 @@ fun SelectorFecha(
     } ?: ""
 
     Column {
-
-        //  BOX para que TODO sea clickeable
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { showDialog = true }
         ) {
-
             OutlinedTextField(
                 value = fechaTexto,
                 onValueChange = {},
                 readOnly = true,
-                enabled = false, // importante
+                enabled = false,
                 label = { Text("Fecha") },
                 placeholder = { Text("Selecciona una fecha") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledBorderColor = Color.Gray,
+                    disabledTextColor = Color.Black,
+                    disabledLabelColor = Color.Gray,
+                    focusedBorderColor = greenColor,
+                    focusedLabelColor = greenColor
+                )
             )
         }
 
         if (showDialog) {
             DatePickerDialog(
                 onDismissRequest = { showDialog = false },
+                // 🔹 Forzamos también el fondo del calendario a blanco para que combine
+                colors = DatePickerDefaults.colors(containerColor = Color.White),
                 confirmButton = {
-                    TextButton(onClick = {
+                    TextButton(
+                        onClick = {
+                            datePickerState.selectedDateMillis?.let { millis ->
+                                val localDate = Instant.ofEpochMilli(millis)
+                                    .atZone(ZoneId.of("UTC"))
+                                    .toLocalDate()
 
-                        datePickerState.selectedDateMillis?.let { millis ->
+                                val correctedMillis = localDate
+                                    .atStartOfDay(ZoneId.systemDefault())
+                                    .toInstant()
+                                    .toEpochMilli()
 
-                            // FIX TIMEZONE (SOLUCIÓN REAL)
-                            val localDate = Instant.ofEpochMilli(millis)
-                                .atZone(ZoneId.of("UTC"))
-                                .toLocalDate()
-
-                            val correctedMillis = localDate
-                                .atStartOfDay(ZoneId.systemDefault())
-                                .toInstant()
-                                .toEpochMilli()
-
-                            onFechaSelected(correctedMillis)
-                        }
-
-                        showDialog = false
-                    }) {
+                                onFechaSelected(correctedMillis)
+                            }
+                            showDialog = false
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = greenColor)
+                    ) {
                         Text("Aceptar")
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showDialog = false }) {
+                    TextButton(
+                        onClick = { showDialog = false },
+                        colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
+                    ) {
                         Text("Cancelar")
                     }
                 }
             ) {
-                DatePicker(state = datePickerState)
+                DatePicker(
+                    state = datePickerState,
+                    colors = DatePickerDefaults.colors(
+                        todayContentColor = greenColor,
+                        todayDateBorderColor = greenColor,
+                        selectedDayContainerColor = greenColor,
+                        selectedDayContentColor = Color.White,
+                        currentYearContentColor = greenColor,
+                        selectedYearContainerColor = greenColor,
+                        selectedYearContentColor = Color.White
+                    )
+                )
             }
         }
     }
@@ -529,7 +503,7 @@ fun RowScope.ToggleButton(
                 RoundedCornerShape(12.dp)
             )
             .clickable(
-                indication = null, //quita efecto (sombra/ripple)
+                indication = null,
                 interactionSource = remember { MutableInteractionSource() }
             ) { onClick() }
             .padding(vertical = 12.dp),
@@ -537,7 +511,7 @@ fun RowScope.ToggleButton(
     ) {
         Text(
             text = text,
-            color = if (selected) Color(0xFF22C55E) else Color.Gray,
+            color = if (selected) greenColor else Color.Gray,
             fontWeight = FontWeight.Medium
         )
     }

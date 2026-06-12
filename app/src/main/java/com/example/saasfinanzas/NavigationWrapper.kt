@@ -5,17 +5,13 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.saasfinanzas.features.auth.AuthViewModel
 import com.example.saasfinanzas.features.auth.LoginScreen
 import com.example.saasfinanzas.features.auth.RegisterScreen
 import com.example.saasfinanzas.features.budget.AddBudget
@@ -40,28 +36,13 @@ import com.google.firebase.auth.FirebaseAuth
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NavigationWrapper(navHostController: NavHostController) {
-    val viewModel: AuthViewModel = hiltViewModel()
-    val user by viewModel.currentUser.collectAsState()
 
     val navBackStackEntry by navHostController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // CORRECCIÓN 1: Calculamos el destino inicial una sola vez y lo guardamos en memoria.
-    // Usamos FirebaseAuth directamente de forma síncrona para que sea instantáneo.
+    // Calculamos el destino inicial una sola vez de forma síncrona.
     val startDest = remember {
         if (FirebaseAuth.getInstance().currentUser != null) "home" else "welcome"
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.getCurrentUserUid()
-    }
-
-    LaunchedEffect(user) {
-        if (user == null && currentRoute != "login" && currentRoute != "register") {
-            navHostController.navigate("welcome") {
-                popUpTo(navHostController.graph.id) { inclusive = true }
-            }
-        }
     }
 
     val screensWithBottomNav = listOf(
@@ -74,8 +55,7 @@ fun NavigationWrapper(navHostController: NavHostController) {
 
     Scaffold(
         bottomBar = {
-            // CORRECCIÓN 2: Le quitamos el "user != null".
-            // Si la ruta está en la lista permitida, mostramos la barra sin importar nada más.
+            // Si la ruta está en la lista permitida, mostramos la barra inferior.
             if (currentRoute in screensWithBottomNav) {
                 BottomNavigationBar(navHostController)
             }
@@ -84,7 +64,7 @@ fun NavigationWrapper(navHostController: NavHostController) {
 
         NavHost(
             navController = navHostController,
-            startDestination = startDest, // Usamos la variable estática que calculamos arriba
+            startDestination = startDest, // Inicia donde debe iniciar
             modifier = Modifier.padding(innerPadding)
         ) {
 

@@ -34,10 +34,14 @@ import com.example.saasfinanzas.data.model.Categoria
 import com.example.saasfinanzas.data.model.Movimiento
 import com.example.saasfinanzas.data.model.Presupuesto
 import com.example.saasfinanzas.features.budget.BudgetViewModel
+import com.example.saasfinanzas.features.categorys.CategoryViewModel
 import com.example.saasfinanzas.features.transactions.TransactionViewModel
 import com.example.saasfinanzas.features.transactions.categoriasFree
 import java.util.Calendar
 import kotlin.math.abs
+
+// 🔹 Tu verde oscuro oficial
+private val greenColor = Color(0xFF2E7D32)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,6 +51,9 @@ fun ReportScreen(navHostController: NavHostController) {
     var selectedTab by remember { mutableStateOf("Mensual") }
     var verTodos by remember { mutableStateOf(false) }
 
+    // 🌟 CAMBIA ESTO A 'false' PARA VER EL NUEVO DISEÑO DE UPSELL PARA USUARIOS GRATUITOS
+    val isPremium = false
+
     val viewModel: TransactionViewModel = hiltViewModel()
     val movimientos by viewModel.movimientos.collectAsState()
 
@@ -54,10 +61,15 @@ fun ReportScreen(navHostController: NavHostController) {
     val presupuestosState = viewModelPresupuesto.presupuestos.collectAsState()
     val presupuestos = presupuestosState.value
 
+    val viewModelCat: CategoryViewModel = hiltViewModel()
+    val categoriasdb by viewModelCat.categorias.collectAsState()
+    val categorias = categoriasFree + categoriasdb
+
     val navBackStackEntry by navHostController.currentBackStackEntryAsState()
     LaunchedEffect(navBackStackEntry) {
         viewModel.cargarMovimientos()
         viewModelPresupuesto.getBudgets()
+        viewModelCat.getCategory()
     }
 
     // VARIABLES DE TIEMPO
@@ -66,15 +78,13 @@ fun ReportScreen(navHostController: NavHostController) {
     val mesActual = calendar.get(Calendar.MONTH)
     val semanaActual = calendar.get(Calendar.WEEK_OF_YEAR)
 
-    // 1. FILTRAR GASTOS DEL PERIODO ACTUAL
-    val gastos = movimientos.filter { mov ->
+    // 1. FILTRAR TODOS LOS MOVIMIENTOS DEL PERIODO (Ingresos y Gastos)
+    val movimientosPeriodo = movimientos.filter { mov ->
         val cal = Calendar.getInstance()
         cal.timeInMillis = mov.fecha
         val anioMov = cal.get(Calendar.YEAR)
         val mesMov = cal.get(Calendar.MONTH)
         val semanaMov = cal.get(Calendar.WEEK_OF_YEAR)
-
-        if (mov.tipo != "gasto") return@filter false
 
         when (selectedTab) {
             "Semanal" -> anioMov == anioActual && semanaMov == semanaActual
@@ -84,10 +94,10 @@ fun ReportScreen(navHostController: NavHostController) {
         }
     }
 
-    // 2. CÁLCULO DE TOTALES
+    val gastos = movimientosPeriodo.filter { it.tipo == "gasto" }
     val gastosTotal = gastos.sumOf { it.monto }
 
-    // 3. CALCULAR GASTOS DEL PERIODO ANTERIOR (Para la comparación real)
+    // 3. CALCULAR GASTOS DEL PERIODO ANTERIOR
     val gastosPasados = movimientos.filter { mov ->
         if (mov.tipo != "gasto") return@filter false
         val cal = Calendar.getInstance().apply { timeInMillis = mov.fecha }
@@ -111,7 +121,7 @@ fun ReportScreen(navHostController: NavHostController) {
         }
     }.sumOf { it.monto }
 
-    // MATEMÁTICA PARA EL TEXTO DE COMPARACIÓN (Ej: ↓ 12% vs el periodo pasado)
+    // MATEMÁTICA PARA EL TEXTO DE COMPARACIÓN
     val diferenciaGastos = gastosTotal - gastosPasados
     val porcentajeDiferencia = if (gastosPasados > 0) (abs(diferenciaGastos) / gastosPasados) * 100 else 0.0
     val porcentajeFormateado = "%.1f".format(porcentajeDiferencia)
@@ -123,14 +133,13 @@ fun ReportScreen(navHostController: NavHostController) {
         diferenciaGastos > 0 -> "↑ $porcentajeFormateado% vs el periodo pasado"
         else -> "= Mismo gasto que el periodo pasado"
     }
-    val colorComparacion = if (diferenciaGastos <= 0) Color(0xFF1B3D2F) else Color.Red
+    val colorComparacion = if (diferenciaGastos <= 0) greenColor else Color.Red
 
     // 4. DATOS PARA GRÁFICOS Y ANÁLISIS
-    val categorias = categoriasFree
-    val gastosAgrupados = categorias.map { categoria ->
-        val totalCategoria = gastos.filter { it.categoriaId == categoria.id }.sumOf { it.monto }
-        Pair(categoria.nombre, totalCategoria)
-    }.filter { it.second > 0.0 }
+    val gastosAgrupados = gastos.groupBy { it.categoriaNombre }
+        .map { Pair(it.key, it.value.sumOf { m -> m.monto }) }
+        .filter { it.second > 0.0 }
+        .sortedByDescending { it.second }
 
     val categoriaMayorGasto = gastosAgrupados.maxByOrNull { it.second }
 
@@ -143,300 +152,376 @@ fun ReportScreen(navHostController: NavHostController) {
         }
     }
 
-    val gastosMostrados = if (verTodos) gastos else gastos.take(3)
+    // 6. CATEGORÍAS PRINCIPALES
+    val categoriasUso = categorias.mapNotNull { cat ->
+        val movs = movimientosPeriodo.filter { it.categoriaId == cat.id || it.categoriaNombre == cat.nombre }
+        if (movs.isEmpty()) null
+        else {
+            val totalGastos = movs.filter { it.tipo == "gasto" }.sumOf { it.monto }
+            val totalIngresos = movs.filter { it.tipo == "ingreso" }.sumOf { it.monto }
+            val presupuesto = presupuestos.find { it.categoriaId == cat.id }?.montoLimite?.toDouble() ?: 0.0
 
-    // SIMULACIÓN DE ESTADO PREMIUM (Cámbialo a true para probar que todo funciona)
-    val isPremium = true
-
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Reportes", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = { navHostController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "volver")
-                    }
-                }
+            CategoryUsageData(
+                nombre = cat.nombre,
+                gastos = totalGastos,
+                ingresos = totalIngresos,
+                presupuesto = presupuesto
             )
         }
-    ) { padding ->
+    }.sortedByDescending { it.gastos + it.ingresos }.take(5)
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFEAF2EC))
-                .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+    val gastosMostrados = if (verTodos) gastos else gastos.take(3)
 
-            // --- TABS DE NAVEGACIÓN ---
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(50))
-                        .background(Color(0xFFDDE6DD))
-                        .padding(4.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    listOf("Semanal", "Mensual", "Anual").forEach { tab ->
-                        val selected = tab == selectedTab
-                        val isLocked = !isPremium && (tab == "Semanal" || tab == "Anual")
-
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(50))
-                                .background(
-                                    when {
-                                        selected -> Color.White
-                                        isLocked -> Color.LightGray.copy(alpha = 0.5f)
-                                        else -> Color.Transparent
-                                    }
-                                )
-                                .clickable(enabled = true) {
-                                    if (isLocked) navHostController.navigate("premium")
-                                    else selectedTab = tab
-                                }
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                if (isLocked) {
-                                    Icon(Icons.Default.Lock, contentDescription = "Premium", modifier = Modifier.size(14.dp), tint = Color.Gray)
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                }
-                                Text(
-                                    text = tab,
-                                    color = if (isLocked) Color.Gray else Color.Black,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-                                )
-                            }
+    MaterialTheme(
+        colorScheme = MaterialTheme.colorScheme.copy(
+            primary = greenColor,
+            primaryContainer = greenColor.copy(alpha = 0.1f),
+            onPrimaryContainer = greenColor
+        )
+    ) {
+        Scaffold(
+            containerColor = Color(0xFFF3F4F6),
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text("Reportes", fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = { navHostController.popBackStack() }) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "volver")
                         }
-                        Spacer(modifier = Modifier.width(4.dp))
-                    }
-                }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color(0xFFF3F4F6)
+                    )
+                )
             }
+        ) { padding ->
 
-            // --- GRÁFICOS Y TOTAL GASTADO ---
-            item {
-                Card(
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
 
-                        // Lógica del Gráfico Premium vs Free
-                        if (isPremium) {
-                            if (gastos.isEmpty()) {
-                                Text("No hay gastos registrados en este periodo.", color = Color.Gray, modifier = Modifier.padding(32.dp))
-                            } else if (selectedTab == "Anual") {
-                                PremiumAnnualBarChart(gastosPorMes = gastosAnualesPorMes)
-                            } else {
-                                PremiumDonutChart(gastosPorCategoria = gastosAgrupados, totalGastos = gastosTotal, modifier = Modifier.fillMaxWidth())
-                            }
-                        } else {
-                            // Gráfico difuminado para usuarios Free
-                            Box(contentAlignment = Alignment.Center) {
-                                val fakeData = listOf(Pair("A", 40.0), Pair("B", 30.0), Pair("C", 30.0))
-                                PremiumDonutChart(
-                                    gastosPorCategoria = fakeData,
-                                    totalGastos = gastosTotal,
-                                    modifier = Modifier.fillMaxWidth().blur(10.dp)
-                                )
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(Icons.Default.Lock, contentDescription = "Premium", tint = Color(0xFF1B3D2F), modifier = Modifier.size(32.dp))
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text("Gráficos Premium", fontWeight = FontWeight.Bold, color = Color(0xFF1B3D2F))
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // COMPARACIÓN REAL
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(50))
-                                .background(if (diferenciaGastos <= 0) Color(0xFFD1F2E0) else Color(0xFFFFEBEB)) // Verde si bajó, Rojo si subió
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
-                                .then(if (!isPremium) Modifier.blur(6.dp) else Modifier)
-                        ) {
-                            Text(textoComparacion, color = colorComparacion, fontWeight = FontWeight.Medium)
-                        }
-                    }
-                }
-            }
-
-            // --- CATEGORÍAS PRINCIPALES ---
-            item {
-                Card(
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFDDEEDD))
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Categorías principales", fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        categorias.forEach { categoria ->
-                            var gastosCategoria = 0.0
-                            gastos.forEach { mov ->
-                                if (mov.categoriaId == categoria.id) {
-                                    gastosCategoria += mov.monto
-                                }
-                            }
-                            CategoryItem(categoria, gastosCategoria, presupuestos)
-                        }
-
-                        if (!isPremium) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { navHostController.navigate("premium") }
-                                    .padding(vertical = 8.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(Icons.Default.Lock, contentDescription = "Premium", tint = Color.Gray, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Crear categorías personalizadas", color = Color.Gray, fontWeight = FontWeight.Medium)
-                            }
-                        }
-                    }
-                }
-            }
-
-            // --- BOTÓN EXPORTAR Y HEADER DEL HISTORIAL ---
-            item {
-                Column {
-                    OutlinedButton(
-                        onClick = {
-                            if(isPremium) {
-                                val uri = viewModel.exportarMovimientosACSV(context, gastos)
-                                if (uri != null) {
-                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                        type = "text/csv"
-                                        putExtra(Intent.EXTRA_SUBJECT, "Reporte de Gastos")
-                                        putExtra(Intent.EXTRA_STREAM, uri)
-                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                    }
-                                    context.startActivity(Intent.createChooser(shareIntent, "Exportar reporte a..."))
-                                }
-                            }
-                            else { navHostController.navigate("premium") }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (isPremium) Icons.Default.Share else Icons.Default.Lock,
-                            contentDescription = "Exportar",
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Exportar a Excel (CSV)")
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
+                // --- TABS DE NAVEGACIÓN ---
+                item {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(50))
+                            .background(Color(0xFFE5E7EB))
+                            .padding(4.dp),
+                        horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Historial", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text(
-                            if (verTodos) "Ver menos" else "Ver todo",
-                            color = Color(0xFF1DB954),
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.clickable { verTodos = !verTodos }
-                        )
-                    }
-                }
-            }
+                        listOf("Semanal", "Mensual", "Anual").forEach { tab ->
+                            val selected = tab == selectedTab
+                            val isLocked = !isPremium && (tab == "Semanal" || tab == "Anual")
 
-            // --- LISTA DEL HISTORIAL ---
-            items(gastosMostrados) { gasto ->
-                HistoryItem(gasto)
-            }
-
-            // --- TARJETA PREMIUM (UPSELL PRINCIPAL) ---
-            if (!isPremium) {
-                item {
-                    Card(
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1B3D2F)),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(24.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(Icons.Default.Star, contentDescription = "Premium", tint = Color(0xFFFFD700), modifier = Modifier.size(40.dp))
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            Text("Toma el control total", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = Color.White)
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Text(
-                                "Desbloquea reportes anuales, exportación a Excel, categorías ilimitadas y análisis profundos de tus hábitos.",
-                                color = Color(0xFFEAF2EC), textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium
-                            )
-                            Spacer(modifier = Modifier.height(20.dp))
-
-                            Button(
-                                onClick = { navHostController.navigate("premium") },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1DB954)),
-                                modifier = Modifier.fillMaxWidth().height(50.dp)
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(50))
+                                    .background(
+                                        when {
+                                            selected -> Color.White
+                                            else -> Color.Transparent
+                                        }
+                                    )
+                                    .clickable {
+                                        if (isLocked) navHostController.navigate("premium")
+                                        else selectedTab = tab
+                                    }
+                                    .padding(vertical = 10.dp),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Text("Ver planes Premium", color = Color.White, fontWeight = FontWeight.Bold)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    if (isLocked) {
+                                        Icon(Icons.Default.Lock, contentDescription = "Premium", modifier = Modifier.size(14.dp), tint = greenColor)
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                    }
+                                    Text(
+                                        text = tab,
+                                        color = if (selected) greenColor else Color.Gray,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            // --- MENSAJE DE IA REAL (SOLO PREMIUM) ---
-            if (isPremium) {
+                // --- GRÁFICOS Y TOTAL GASTADO ---
                 item {
-                    // LÓGICA DE TEXTOS IA
-                    val tituloIA: String
-                    val cuerpoIA: String
-
-                    if (gastosTotal == 0.0) {
-                        tituloIA = "Sin actividad reciente"
-                        cuerpoIA = "Registra tus gastos para generar un análisis inteligente de este periodo."
-                    } else if (gastosPasados == 0.0) {
-                        tituloIA = "¡Análisis Inicial!"
-                        cuerpoIA = "Este periodo tu mayor fuga de dinero fue en ${categoriaMayorGasto?.first ?: "varios"} ($${categoriaMayorGasto?.second?.toInt() ?: 0})."
-                    } else if (diferenciaGastos <= 0) {
-                        tituloIA = "¡Excelente manejo!"
-                        cuerpoIA = "Lograste reducir tus gastos un $porcentajeFormateado% vs el ciclo pasado. Tu gasto principal fue ${categoriaMayorGasto?.first ?: "general"}."
-                    } else {
-                        tituloIA = "Cuidado con los gastos"
-                        cuerpoIA = "Gastaste un $porcentajeFormateado% más que el periodo pasado. Vigila tu presupuesto de ${categoriaMayorGasto?.first ?: "general"} ($${categoriaMayorGasto?.second?.toInt() ?: 0})."
-                    }
-
-                    Card(
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = if (diferenciaGastos <= 0) Color(0xFF00C853) else Color(0xFFE53935))
+                    ElevatedCard(
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
                     ) {
-                        Column(modifier = Modifier.padding(20.dp)) {
-                            Text("ANÁLISIS INTELIGENTE", color = Color.White, fontWeight = FontWeight.Bold)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(tituloIA, color = Color.White, style = MaterialTheme.typography.titleLarge)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(cuerpoIA, color = Color.White)
+                        Column(
+                            modifier = Modifier
+                                .padding(20.dp)
+                                .fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+
+                            if (isPremium) {
+                                if (gastos.isEmpty()) {
+                                    Text("No hay gastos registrados en este periodo.", color = Color.Gray, modifier = Modifier.padding(32.dp))
+                                } else if (selectedTab == "Anual") {
+                                    PremiumAnnualBarChart(gastosPorMes = gastosAnualesPorMes)
+                                } else {
+                                    PremiumDonutChart(gastosPorCategoria = gastosAgrupados, totalGastos = gastosTotal, modifier = Modifier.fillMaxWidth())
+                                }
+                            } else {
+                                // 🌟 MEJORA VISUAL: El usuario ve el gráfico real traslúcido, lo que incita más a comprar
+                                Box(contentAlignment = Alignment.Center) {
+                                    val dummyData = listOf(Pair("Comida", 1500.0), Pair("Renta", 3000.0), Pair("Otros", 800.0))
+                                    PremiumDonutChart(
+                                        gastosPorCategoria = dummyData,
+                                        totalGastos = 5300.0,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .blur(8.dp) // Desenfoque sutil
+                                    )
+                                    // Tarjeta de bloqueo flotante e interactiva
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .background(Color.White.copy(alpha = 0.85f))
+                                            .clickable { navHostController.navigate("premium") }
+                                            .padding(16.dp)
+                                    ) {
+                                        Icon(Icons.Default.Lock, contentDescription = "Premium", tint = greenColor, modifier = Modifier.size(28.dp))
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text("Ver distribución de gastos", fontWeight = FontWeight.Bold, color = greenColor, fontSize = 14.sp)
+                                        Text("Disponible en Premium 💎", color = Color.Gray, fontSize = 11.sp)
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // COMPARACIÓN REAL
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(50))
+                                    .background(if (diferenciaGastos <= 0) Color(0xFFE8F5E9) else Color(0xFFFFEBEB))
+                                    .padding(horizontal = 14.dp, vertical = 8.dp)
+                                    .then(if (!isPremium) Modifier.blur(5.dp) else Modifier)
+                            ) {
+                                Text(textoComparacion, color = colorComparacion, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                            }
                         }
                     }
                 }
+
+                // --- CATEGORÍAS PRINCIPALES (TOP USO) ---
+                item {
+                    ElevatedCard(
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Text("Categorías más usadas", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = Color.DarkGray)
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            if (categoriasUso.isEmpty()) {
+                                Text("Sin movimientos en este periodo.", color = Color.Gray, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                            } else {
+                                categoriasUso.forEach { catData ->
+                                    CategoryUsageItemUI(catData)
+                                }
+                            }
+
+                            if (!isPremium) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .clickable { navHostController.navigate("premium") }
+                                        .background(Color(0xFFF3F4F6))
+                                        .padding(12.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Lock, contentDescription = "Premium", tint = Color.Gray, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Crear categorías personalizadas", color = Color.Gray, fontWeight = FontWeight.Medium, fontSize = 13.sp)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // --- BOTÓN EXPORTAR Y HEADER DEL HISTORIAL ---
+                item {
+                    Column {
+                        OutlinedButton(
+                            onClick = {
+                                if(isPremium) {
+                                    val uri = viewModel.exportarMovimientosACSV(context, gastos)
+                                    if (uri != null) {
+                                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                            type = "text/csv"
+                                            putExtra(Intent.EXTRA_SUBJECT, "Reporte de Gastos")
+                                            putExtra(Intent.EXTRA_STREAM, uri)
+                                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                        }
+                                        context.startActivity(Intent.createChooser(shareIntent, "Exportar reporte a..."))
+                                    }
+                                }
+                                else { navHostController.navigate("premium") }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = greenColor),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, greenColor)
+                        ) {
+                            Icon(
+                                imageVector = if (isPremium) Icons.Default.Share else Icons.Default.Lock,
+                                contentDescription = "Exportar",
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Exportar a Excel (CSV)", fontWeight = FontWeight.Bold)
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Historial de Gastos", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                            Text(
+                                if (verTodos) "Ver menos" else "Ver todo",
+                                color = greenColor,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.clickable { verTodos = !verTodos }
+                            )
+                        }
+                    }
+                }
+
+                // --- LISTA DEL HISTORIAL ---
+                items(gastosMostrados) { gasto ->
+                    HistoryItem(gasto)
+                }
+
+                // --- MENSAJE DE IA REAL O UPSELL DE IA ---
+                item {
+                    if (isPremium) {
+                        val tituloIA: String
+                        val cuerpoIA: String
+
+                        if (gastosTotal == 0.0) {
+                            tituloIA = "Sin actividad reciente"
+                            cuerpoIA = "Registra tus gastos para generar un análisis inteligente de este periodo."
+                        } else if (gastosPasados == 0.0) {
+                            tituloIA = "¡Análisis Inicial!"
+                            cuerpoIA = "Este periodo tu mayor fuga de dinero fue en ${categoriaMayorGasto?.first ?: "varios"} ($${categoriaMayorGasto?.second?.toInt() ?: 0})."
+                        } else if (diferenciaGastos <= 0) {
+                            tituloIA = "¡Excelente manejo!"
+                            cuerpoIA = "Lograste reducir tus gastos un $porcentajeFormateado% vs el ciclo pasado. Tu principal gasto fue en ${categoriaMayorGasto?.first ?: "general"}."
+                        } else {
+                            tituloIA = "Cuidado con los gastos"
+                            cuerpoIA = "Gastaste un $porcentajeFormateado% más que el periodo pasado. Vigila tu presupuesto de ${categoriaMayorGasto?.first ?: "general"} ($${categoriaMayorGasto?.second?.toInt() ?: 0})."
+                        }
+
+                        Card(
+                            shape = RoundedCornerShape(24.dp),
+                            colors = CardDefaults.cardColors(containerColor = if (diferenciaGastos <= 0) greenColor else Color(0xFFD32F2F))
+                        ) {
+                            Column(modifier = Modifier.padding(24.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.AutoAwesome, contentDescription = "IA", tint = Color(0xFFFFD700), modifier = Modifier.size(20.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("ANÁLISIS INTELIGENTE", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(tituloIA, color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(cuerpoIA, color = Color.White.copy(alpha = 0.9f), lineHeight = 20.sp)
+                            }
+                        }
+                    } else {
+                        // 🌟 MEJORA PSICOLÓGICA: El usuario free ve la caja de IA bloqueada.
+                        // Despierta curiosidad y necesidad ("¿Qué dirá la IA sobre mi dinero?")
+                        Card(
+                            shape = RoundedCornerShape(24.dp),
+                            colors = CardDefaults.cardColors(containerColor = greenColor.copy(alpha = 0.08f)),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, greenColor.copy(alpha = 0.3f)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { navHostController.navigate("premium") }
+                        ) {
+                            Column(modifier = Modifier.padding(24.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.AutoAwesome, contentDescription = "IA", tint = greenColor, modifier = Modifier.size(20.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("ANÁLISIS FINANCIERO CON IA", color = greenColor, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text("La IA está analizando tus datos...", color = Color.Black, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    "Desbloquea Premium para recibir consejos automáticos sobre cómo optimizar tus ahorros, alertas de fugas de dinero y sugerencias personalizadas.",
+                                    color = Color.DarkGray, fontSize = 13.sp, lineHeight = 18.sp
+                                )
+                                Spacer(modifier = Modifier.height(14.dp))
+                                Text("Obtener Consejos con IA ✨", color = greenColor, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            }
+                        }
+                    }
+                }
+
+                // --- TARJETA PREMIUM (UPSELL PRINCIPAL ABAJO) ---
+                if (!isPremium) {
+                    item {
+                        Card(
+                            shape = RoundedCornerShape(24.dp),
+                            colors = CardDefaults.cardColors(containerColor = greenColor),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(Icons.Default.Star, contentDescription = "Premium", tint = Color(0xFFFFD700), modifier = Modifier.size(48.dp))
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Text("Toma el control total", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = Color.White)
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Text(
+                                    "Desbloquea reportes anuales, exportación a Excel, categorías ilimitadas y análisis profundos de tus hábitos.",
+                                    color = Color(0xFFEAF2EC), textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium
+                                )
+                                Spacer(modifier = Modifier.height(20.dp))
+
+                                Button(
+                                    onClick = { navHostController.navigate("premium") },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(50.dp)
+                                ) {
+                                    Text("Ver planes Premium", color = greenColor, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                item { Spacer(modifier = Modifier.height(30.dp)) }
             }
         }
     }
@@ -446,7 +531,59 @@ fun ReportScreen(navHostController: NavHostController) {
 // COMPONENTES AUXILIARES
 // ==========================================
 
-// Función para acortar números grandes (ej. 1400 -> 1.4k)
+data class CategoryUsageData(
+    val nombre: String,
+    val gastos: Double,
+    val ingresos: Double,
+    val presupuesto: Double
+)
+
+@Composable
+fun CategoryUsageItemUI(data: CategoryUsageData) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .padding(bottom = 16.dp)) {
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(data.nombre, fontWeight = FontWeight.SemiBold, color = Color.DarkGray, fontSize = 15.sp)
+
+            Column(horizontalAlignment = Alignment.End) {
+                if (data.ingresos > 0) {
+                    Text("+ $${data.ingresos}", color = greenColor, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                }
+                if (data.gastos > 0) {
+                    Text("- $${data.gastos}", color = Color(0xFFD32F2F), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                }
+            }
+        }
+
+        if (data.presupuesto > 0 && data.gastos > 0) {
+            val progress = (data.gastos.toFloat() / data.presupuesto.toFloat()).coerceIn(0f, 1f)
+            Spacer(modifier = Modifier.height(8.dp))
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(50)),
+                color = if (progress >= 1f) Color.Red else greenColor,
+                trackColor = Color(0xFFF3F4F6)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                "Presupuesto: $${data.presupuesto}",
+                color = Color.Gray,
+                fontSize = 11.sp,
+                modifier = Modifier.align(Alignment.End)
+            )
+        }
+    }
+}
+
 fun compactFormat(value: Double): String {
     return when {
         value >= 1_000_000 -> "%.1fM".format(value / 1_000_000)
@@ -456,52 +593,24 @@ fun compactFormat(value: Double): String {
 }
 
 @Composable
-fun CategoryItem(categoria: Categoria, gastosCategoy: Double, presupuestos: List<Presupuesto>) {
-    var presupuesto = 0.0
-    presupuestos.forEach { presupuestoCat ->
-        if (presupuestoCat.categoriaId == categoria.id) {
-            presupuesto = presupuestoCat.montoLimite.toDouble()
-        }
-    }
-
-    val progress: Float = if (presupuesto > 0) {
-        (gastosCategoy.toFloat() / presupuesto.toFloat()).coerceIn(0f, 1f)
-    } else {
-        0f
-    }
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(categoria.nombre)
-            Text("$$gastosCategoy", fontWeight = FontWeight.Bold)
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        LinearProgressIndicator(
-            progress = { progress },
-            modifier = Modifier.fillMaxWidth().height(6.dp),
-            color = if (progress >= 1f) Color.Red else Color(0xFF1DB954),
-            trackColor = Color.White
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-    }
-}
-
-@Composable
 fun HistoryItem(gasto: Movimiento) {
-    Card(
+    ElevatedCard(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(gasto.descripcion, modifier = Modifier.weight(1f))
-            Text("-$${gasto.monto}", color = Color.Red, fontWeight = FontWeight.Bold)
+            Text(gasto.descripcion, modifier = Modifier.weight(1f), fontWeight = FontWeight.Medium)
+            Text("-$${gasto.monto}", color = Color(0xFFD32F2F), fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -509,8 +618,8 @@ fun HistoryItem(gasto: Movimiento) {
 @Composable
 fun PremiumDonutChart(gastosPorCategoria: List<Pair<String, Double>>, totalGastos: Double, modifier: Modifier = Modifier) {
     val chartColors = listOf(
-        Color(0xFF1DB954), Color(0xFF1B3D2F), Color(0xFFFFD700),
-        Color(0xFF4A90E2), Color(0xFFFF6B6B), Color(0xFF9B59B6)
+        greenColor, Color(0xFF81C784), Color(0xFFFFD54F),
+        Color(0xFF64B5F6), Color(0xFFE57373), Color(0xFFBA68C8)
     )
 
     Box(contentAlignment = Alignment.Center, modifier = modifier.padding(16.dp)) {
@@ -534,8 +643,8 @@ fun PremiumDonutChart(gastosPorCategoria: List<Pair<String, Double>>, totalGasto
         }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Total", color = Color.Gray, style = MaterialTheme.typography.labelMedium)
-            Text("$${compactFormat(totalGastos)}", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = Color(0xFF1B3D2F))
+            Text("Gastos", color = Color.Gray, style = MaterialTheme.typography.labelMedium)
+            Text("$${compactFormat(totalGastos)}", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = greenColor)
         }
     }
 }
@@ -545,9 +654,13 @@ fun PremiumAnnualBarChart(gastosPorMes: List<Double>) {
     val maxGasto = gastosPorMes.maxOrNull()?.toFloat() ?: 1f
     val meses = listOf("E", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D")
 
-    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .padding(16.dp)) {
         Row(
-            modifier = Modifier.fillMaxWidth().height(150.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom
         ) {
@@ -560,7 +673,6 @@ fun PremiumAnnualBarChart(gastosPorMes: List<Double>) {
                     modifier = Modifier.weight(1f)
                 ) {
                     if (gasto > 0) {
-                        // AQUÍ APLICAMOS EL FORMATO (1400 -> 1.4k) Y LE QUITAMOS LAS RESTRICCIONES DE ANCHO
                         Text(
                             text = "$${compactFormat(gasto)}",
                             color = Color.Gray,
@@ -568,7 +680,7 @@ fun PremiumAnnualBarChart(gastosPorMes: List<Double>) {
                             fontSize = 9.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Visible,
-                            modifier = Modifier.requiredWidth(30.dp), // Permite que el texto sobresalga un poco de la barra
+                            modifier = Modifier.requiredWidth(30.dp),
                             textAlign = TextAlign.Center
                         )
                     }
@@ -578,7 +690,7 @@ fun PremiumAnnualBarChart(gastosPorMes: List<Double>) {
                             .height(120.dp * heightPercentage)
                             .width(16.dp)
                             .background(
-                                color = if (gasto > 0) Color(0xFF1DB954) else Color(0xFFEAF2EC),
+                                color = if (gasto > 0) greenColor else Color(0xFFE8F5E9),
                                 shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
                             )
                     )

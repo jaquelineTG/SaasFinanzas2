@@ -192,7 +192,7 @@ fun AddCategory(navController: NavController) {
                                 .border(
                                     width = 1.dp,
                                     color = if (isSelected)
-                                        MaterialTheme.colorScheme.primary
+                                       greenColor
                                     else
                                         Color.LightGray,
                                     shape = RoundedCornerShape(14.dp)
