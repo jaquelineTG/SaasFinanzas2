@@ -242,9 +242,9 @@ fun RegisterScreen(navHostController: NavHostController) {
                             isValid = false
                         }
 
-                        // 🔹 Llamada al ViewModel (Asegúrate de tener un método de registro en tu AuthViewModel)
+                        // 🔹 Llamada al ViewModel
                         if (isValid) {
-                            // viewModel.register(email, password, name)  <-- Descomenta/ajusta esto según tu ViewModel
+                            viewModel.register(email, password, name)
                         }
                     },
                     modifier = Modifier

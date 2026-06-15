@@ -40,7 +40,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     private fun mostrarNotificacion(titulo: String, cuerpo: String) {
-        // Intent para que al tocar la notificación se abra la app
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
@@ -55,19 +54,27 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val channelId = "saasfinanzas_alertas_premium"
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
-        // Construimos el diseño de la notificación
+        // 👇 1. YA NO CARGAMOS EL LOGO A COLOR (Eliminamos BitmapFactory)
+
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.welcome1) // 🔹 Cambia esto por el ícono de tu app si tienes uno transparente
+            // 👇 2. Ponemos tu silueta transparente a la izquierda
+            .setSmallIcon(R.drawable.notificacionicon)
+
+            // 👇 3. EL TRUCO MAGICO: Le decimos a Android que pinte el círculo de fondo
+            // Cambia el "#FBB03B" por el código HEX del color amarillo/verde de tu marca
+            .setColor(android.graphics.Color.parseColor("#FBB03B"))
+
             .setContentTitle(titulo)
             .setContentText(cuerpo)
-            .setAutoCancel(true) // Se borra al tocarla
+            .setAutoCancel(true)
             .setSound(defaultSoundUri)
             .setContentIntent(pendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_HIGH) // Para que aparezca como "tarjeta" flotante (Heads-up)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+
+        // 👇 4. BORRAMOS la línea .setLargeIcon() para dejar la derecha vacía
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Crear el canal de notificaciones (Obligatorio en Android 8.0+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
@@ -78,7 +85,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        // Mostramos la notificación (El ID 0 puede cambiarse si quieres mostrar varias notificaciones a la vez sin que se sobreescriban)
         notificationManager.notify(System.currentTimeMillis().toInt(), notificationBuilder.build())
     }
 }
