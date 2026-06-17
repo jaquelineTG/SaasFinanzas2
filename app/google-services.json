@@ -37,6 +37,57 @@
             {
               "client_id": "946399823970-fkvtrrh48r7cd1e010lvhu0586acou4h.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "946399823970-nl1hbc6racod5hk9cdp3d3a17j263ium.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.jaqueline.HelloSwiftFin"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:946399823970:android:2855a5bcf4ec0a01dbe93b",
+        "android_client_info": {
+          "package_name": "com.gastario.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "946399823970-r3fr3stt6ro4kl7e3vnsop05n8l8cr38.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gastario.app",
+            "certificate_hash": "e87100f6e5b32f76f9c1590f93b82aacd63f3a0e"
+          }
+        },
+        {
+          "client_id": "946399823970-fkvtrrh48r7cd1e010lvhu0586acou4h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0kpDxLo5UWjvrEvPiEp9BOX2tu6l8UHM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "946399823970-fkvtrrh48r7cd1e010lvhu0586acou4h.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "946399823970-nl1hbc6racod5hk9cdp3d3a17j263ium.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.jaqueline.HelloSwiftFin"
+              }
             }
           ]
         }

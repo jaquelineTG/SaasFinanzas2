@@ -1,9 +1,10 @@
 [versions]
 agp = "8.12.3"
+billingKtx = "7.1.1"
 credentials = "1.6.0"
 firebaseAuth = "24.1.0"
 googleid = "1.2.0"
-kotlin = "2.0.21"
+kotlin = "2.1.0"
 
 # Compose
 composeBom = "2026.01.01"
@@ -28,7 +29,7 @@ coil = "2.7.0"
 firebaseBom = "34.9.0"
 
 # Hilt
-hilt = "2.51.1"
+hilt = "2.54"
 hiltNavigationCompose = "1.2.0"
 
 # Testing
@@ -39,6 +40,8 @@ firebaseMessagingKtx = "25.0.1"
 firebaseMessagingKtxVersion = "25.0.2"
 animationCore = "1.11.2"
 foundation = "1.11.2"
+remoteCreationCore = "1.0.0-alpha12"
+cameraCamera2Pipe = "1.6.1"
 
 
 [libraries]
@@ -46,10 +49,12 @@ foundation = "1.11.2"
 # -------- HILT --------
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
+billing-ktx = { module = "com.android.billingclient:billing-ktx", version.ref = "billingKtx" }
 com-google-firebase-firebase-messaging-ktx2 = { module = "com.google.firebase:firebase-messaging-ktx" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 firebase-messaging-ktx = { module = "com.google.firebase:firebase-messaging-ktx" }
 google-firebase-auth = { module = "com.google.firebase:firebase-auth", version.ref = "firebaseAuth" }
+google-firebase-storage = { module = "com.google.firebase:firebase-storage" }
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
@@ -111,6 +116,8 @@ google-firebase-messaging-ktx = { group = "com.google.firebase", name = "firebas
 com-google-firebase-firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtxVersion" }
 androidx-animation-core = { group = "androidx.compose.animation", name = "animation-core", version.ref = "animationCore" }
 androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+androidx-remote-creation-core = { group = "androidx.compose.remote", name = "remote-creation-core", version.ref = "remoteCreationCore" }
+androidx-camera-camera2-pipe = { group = "androidx.camera", name = "camera-camera2-pipe", version.ref = "cameraCamera2Pipe" }
 
 
 [plugins]

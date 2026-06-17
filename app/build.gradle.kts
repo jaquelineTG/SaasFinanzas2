@@ -12,12 +12,12 @@ plugins {
 }
 
 android {
-    namespace = "com.example.saasfinanzas"
+    namespace = "com.gastario.app"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.saasfinanzas"
-        minSdk = 24
+        applicationId = "com.gastario.app"
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -57,6 +57,8 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.androidx.animation.core)
     implementation(libs.androidx.foundation)
+    implementation(libs.androidx.remote.creation.core)
+    implementation(libs.androidx.camera.camera2.pipe)
     kapt(libs.hilt.compiler)
 
     // Firebase (BOM primero)
@@ -65,6 +67,8 @@ dependencies {
     // Dependencia para notificaciones push
     implementation(libs.firebase.messaging)
 
+    // Google Play Billing Library para cobrar la suscripción
+    implementation(libs.billing.ktx)
 
     // Credential Manager (El nuevo método oficial para Google Sign-In)
     implementation(libs.androidx.credentials)
@@ -74,7 +78,7 @@ dependencies {
 
 
 
-
+    implementation(libs.google.firebase.storage)
 
 
 
