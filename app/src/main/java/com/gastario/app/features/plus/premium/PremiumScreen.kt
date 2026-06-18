@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 // 🔹 Tu verde oscuro oficial
 private val greenColor = Color(0xFF2E7D32)
@@ -38,15 +39,26 @@ fun PremiumScreen(
     viewModel: PremiumViewModel = hiltViewModel(),
     userViewModel: com.gastario.app.features.user.UserViewModel = hiltViewModel()
 ) {
-    // Escuchamos en tiempo real si el usuario ya adquirió el beneficio
+    // Escuchamos en tiempo real si el usuario ya es premium desde Firestore
     val yaEsPremium by userViewModel.isPremium.collectAsState()
 
-    // Obtenemos la Activity actual (la necesita Google Play)
+    // Escuchamos si Google Play acaba de aprobar un pago nuevo
+    val compraExitosa by viewModel.compraExitosa.collectAsState()
+
+    // Obtenemos la Activity actual (la necesita Google Play para dibujar la ventana de cobro)
     val activity = LocalContext.current as Activity
 
-    // Estados de control del flujo de la interfaz
+    // Estados de control de la UI
     var planSeleccionado by remember { mutableStateOf("anual") }
     var mostrarModalExito by remember { mutableStateOf(false) }
+
+    // Disparador automático cuando se confirma el pago real
+    LaunchedEffect(compraExitosa) {
+        if (compraExitosa) {
+            mostrarModalExito = true
+            viewModel.resetCompraExitosa()
+        }
+    }
 
     MaterialTheme(
         colorScheme = MaterialTheme.colorScheme.copy(
@@ -79,7 +91,7 @@ fun PremiumScreen(
                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // 🔹 HERO CARD (Propuesta de valor constante)
+                // 🔹 HERO CARD
                 item {
                     ElevatedCard(
                         shape = RoundedCornerShape(24.dp),
@@ -126,7 +138,7 @@ fun PremiumScreen(
                     }
                 }
 
-                // 🔹 LISTA DE BENEFICIOS (Tipo Checkmarks)
+                // 🔹 LISTA DE BENEFICIOS
                 item {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -141,9 +153,8 @@ fun PremiumScreen(
                     }
                 }
 
-                // 🔹 FLUJO RECOGNITIVO DINÁMICO (Suscrito vs No Suscrito)
                 if (yaEsPremium) {
-                    // Muestra la tarjeta para usuarios que ya compraron y necesitan gestionar su plan
+                    // 🔹 BOTÓN GESTIÓN DE SUSCRIPCIÓN (Para usuarios activos)
                     item {
                         ElevatedCard(
                             shape = RoundedCornerShape(20.dp),
@@ -169,7 +180,6 @@ fun PremiumScreen(
                                 val contexto = LocalContext.current
                                 OutlinedButton(
                                     onClick = {
-                                        // Redirección oficial exigida por Google para control de cancelaciones
                                         val intent = android.content.Intent(
                                             android.content.Intent.ACTION_VIEW,
                                             android.net.Uri.parse("https://play.google.com/store/account/subscriptions?package=${contexto.packageName}")
@@ -187,14 +197,13 @@ fun PremiumScreen(
                         }
                     }
                 } else {
-                    // 🔹 SELECCIÓN DE PLANES (Solo visible si NO es premium)
+                    // 🔹 SELECCIÓN DE PLANES
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            // Tarjeta Mensual
                             PlanCard(
                                 modifier = Modifier.weight(1f),
                                 title = "Mensual",
@@ -204,7 +213,6 @@ fun PremiumScreen(
                                 onClick = { planSeleccionado = "mensual" }
                             )
 
-                            // Tarjeta Anual (Mejor valor)
                             PlanCard(
                                 modifier = Modifier.weight(1f),
                                 title = "Anual",
@@ -217,21 +225,21 @@ fun PremiumScreen(
                         }
                     }
 
-                    // 🔹 BOTÓN DE COMPRA Y TÉRMINOS (Solo visible si NO es premium)
+                    // 🔹 BOTÓN DE PAGO REAL CON GOOGLE PLAY
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        val currentUserId = remember { com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid }
+                        val currentUserId = remember { FirebaseAuth.getInstance().currentUser?.uid }
 
                         Button(
                             onClick = {
                                 if (currentUserId != null) {
-                                    viewModel.simularCompra(currentUserId) {
-                                        // En lugar de salir directo, mostramos el Modal de Éxito primero
-                                        mostrarModalExito = true
-                                    }
+                                    // ⚠️ ESTOS SON LOS IDs EXACTOS QUE DEBES CREAR EN GOOGLE PLAY CONSOLE
+                                    val idProductoPlay = if (planSeleccionado == "anual") "suscripcion_anual" else "suscripcion_mensual"
+
+                                    viewModel.iniciarFlujoCompra(activity, idProductoPlay)
                                 } else {
-                                    Log.e("BILLING_MOCK", "No se pudo simular la compra: No hay usuario autenticado.")
+                                    Log.e("BILLING", "Error: No hay usuario autenticado.")
                                 }
                             },
                             modifier = Modifier
@@ -266,15 +274,15 @@ fun PremiumScreen(
         }
     }
 
-    // 🔹 DIÁLOGO COMPOSABLE DE CONFIRMACIÓN DE COMPRA SUCCESS
+    // 🔹 DIÁLOGO DE COMPRA REALIZADA CON ÉXITO
     if (mostrarModalExito) {
         AlertDialog(
-            onDismissRequest = { /* Bloqueado para obligar click en confirmación */ },
+            onDismissRequest = { /* Obligamos a hacer clic en el botón */ },
             confirmButton = {
                 Button(
                     onClick = {
                         mostrarModalExito = false
-                        navHostController.popBackStack() // Regresa al Dashboard de la app ya siendo Premium
+                        navHostController.popBackStack()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = greenColor)
                 ) {
@@ -283,7 +291,7 @@ fun PremiumScreen(
             },
             icon = { Icon(Icons.Default.CheckCircle, contentDescription = null, tint = greenColor, modifier = Modifier.size(48.dp)) },
             title = { Text("¡Ya eres Premium!", fontWeight = FontWeight.Bold) },
-            text = { Text("Gracias por tu confianza. Tu acceso ilimitado a todas las herramientas de IA, reportes y almacenamiento seguro ya está activo.") },
+            text = { Text("Gracias por tu compra. Tu suscripción se ha procesado correctamente y el acceso a todas las herramientas está activo.") },
             shape = RoundedCornerShape(24.dp),
             containerColor = Color.White
         )
